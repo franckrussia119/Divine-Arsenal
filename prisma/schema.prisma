@@ -1,0 +1,230 @@
+// Divine Arsenal — database schema
+// Run `npm run prisma:migrate:dev` after editing this file in development.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Student
+  Counselor
+  Admin
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String // bcrypt hash, never the plain password
+  role       Role     @default(Student)
+  bio        String   @default("")
+  homeChurch String   @default("")
+  avatar     String   @default("")
+  streak     Int      @default(0)
+  plan       String   @default("Free Access")
+  planPrice  String   @default("$0/mo")
+  renewsDate String   @default("")
+  createdAt  DateTime @default(now())
+
+  enrollments       Enrollment[]
+  prayerPoints      PrayerPoint[]
+  prayerAgreements  PrayerAgreement[]
+  journalEntries    JournalEntry[]
+  sentMessages      Message[]           @relation("sentMessages")
+  receivedMessages  Message[]           @relation("receivedMessages")
+  blogPosts         BlogPost[]
+  communityPosts    CommunityPost[]
+  communityComments CommunityComment[]
+  communityLikes    CommunityLike[]
+  communityAgrees   CommunityAgreement[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String   @default("")
+  category    String   @default("")
+  duration    String   @default("")
+  description String   @default("")
+  isFree      Boolean  @default(true)
+  price       String?
+  imageUrl    String   @default("")
+  createdAt   DateTime @default(now())
+
+  modules     CourseModule[]
+  enrollments Enrollment[]
+}
+
+model CourseModule {
+  id       String @id @default(cuid())
+  title    String
+  order    Int    @default(0)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  title         String
+  duration      String   @default("")
+  videoDuration String   @default("")
+  videoUrl      String?
+  keyVerse      String?
+  keyVerseRef   String?
+  practices     String[] @default([])
+  content       String?
+  order         Int      @default(0)
+  moduleId      String
+  module        CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  completions LessonCompletion[]
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress   Int      @default(0)
+  enrolledAt DateTime @default(now())
+
+  completions LessonCompletion[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonCompletion {
+  id           String     @id @default(cuid())
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completedAt  DateTime   @default(now())
+
+  @@unique([enrollmentId, lessonId])
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  category   String   @default("")
+  excerpt    String   @default("")
+  content    String
+  authorId   String?
+  author     User?    @relation(fields: [authorId], references: [id])
+  authorName String   @default("")
+  authorRole String   @default("")
+  readTime   String   @default("")
+  imageUrl   String   @default("")
+  featured   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model PrayerPoint {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @default("")
+  status        String   @default("active") // "active" | "answered"
+  testimonyNote String?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  agreements PrayerAgreement[]
+}
+
+model PrayerAgreement {
+  id        String      @id @default(cuid())
+  prayerId  String
+  prayer    PrayerPoint @relation(fields: [prayerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([prayerId, userId])
+}
+
+model JournalEntry {
+  id             String   @id @default(cuid())
+  text           String
+  category       String   @default("REFLECTION")
+  linkedLessonId String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  text       String
+  senderId   String
+  sender     User     @relation("sentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("receivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model CommunityPost {
+  id        String   @id @default(cuid())
+  content   String
+  imageUrl  String?
+  videoUrl  String?
+  category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  comments   CommunityComment[]
+  likes      CommunityLike[]
+  agreements CommunityAgreement[]
+}
+
+model CommunityComment {
+  id        String        @id @default(cuid())
+  content   String
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+}
+
+model CommunityLike {
+  id       String        @id @default(cuid())
+  postId   String
+  post     CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model CommunityAgreement {
+  id     String        @id @default(cuid())
+  postId String
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model LiveSession {
+  id            String   @id @default(cuid())
+  title         String
+  hostName      String
+  hostAvatar    String   @default("")
+  viewerCount   Int      @default(0)
+  status        String   @default("upcoming") // "live" | "upcoming"
+  scheduledTime String?
+  category      String   @default("Teaching Masterclass")
+  createdAt     DateTime @default(now())
+}
