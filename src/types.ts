@@ -6,6 +6,7 @@ export interface UserProfile {
   email: string;
   phone: string;
   whatsapp: string;
+  language: string;
   role: UserRole;
   bio: string;
   homeChurch: string;
@@ -30,6 +31,27 @@ export interface Group {
   createdByName: string;
   isMember: boolean;
   isAdmin: boolean;
+}
+
+export interface Track {
+  id: string;
+  title: string;
+  artist: string;
+  genre: string;
+  audioUrl: string;
+  coverUrl?: string;
+  duration?: string;
+}
+
+export interface PodcastEpisode {
+  id: string;
+  title: string;
+  theme: string;
+  category: string;
+  description: string;
+  audioUrl: string;
+  coverUrl?: string;
+  duration?: string;
 }
 
 export interface Lesson {
@@ -135,6 +157,7 @@ export interface CommunityPost {
   content: string;
   imageUrl?: string;
   videoUrl?: string;
+  audioUrl?: string;
   likes: number;
   prayerAgreements: number;
   dateStr: string;

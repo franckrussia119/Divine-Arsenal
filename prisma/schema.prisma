@@ -26,6 +26,7 @@ model User {
   homeChurch String   @default("")
   avatar     String   @default("")
   whatsapp   String   @default("")
+  language   String   @default("en") // "en" | "fr" — chosen at signup
   streak     Int      @default(0)
   plan       String   @default("Free Access")
   planPrice  String   @default("$0/mo")
@@ -51,6 +52,8 @@ model User {
   groupsCreated     Group[]
   groupMemberships  GroupMembership[]
   notifications     Notification[]
+  tracks            Track[]
+  podcastEpisodes   PodcastEpisode[]
 }
 
 model Course {
@@ -186,6 +189,7 @@ model CommunityPost {
   content   String
   imageUrl  String?
   videoUrl  String?
+  audioUrl  String?
   category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching | Sermon | Devotional | ...
   feedType  String   @default("city") // "city" (main feed) | "gather"
   authorId  String
@@ -274,4 +278,31 @@ model Notification {
   link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Track {
+  id           String   @id @default(cuid())
+  title        String
+  artist       String
+  genre        String   @default("Worship") // Worship, Gospel, Hymn, Praise, Instrumental, Choir, ...
+  audioUrl     String
+  coverUrl     String?
+  duration     String?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
+
+model PodcastEpisode {
+  id           String   @id @default(cuid())
+  title        String
+  theme        String   @default("Teaching") // Teaching, Testimony, Audio Bible, Prayer, Q&A, Prophecy, ...
+  category     String   @default("General")
+  description  String   @default("")
+  audioUrl     String
+  coverUrl     String?
+  duration     String?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 }

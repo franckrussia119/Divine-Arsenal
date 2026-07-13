@@ -20,7 +20,7 @@ function generateOtp() {
 // --- Sign up: creates an unverified account and emails a 6-digit code ---
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, password, whatsapp, homeChurch } = req.body ?? {};
+    const { name, email, password, whatsapp, homeChurch, language } = req.body ?? {};
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email and password are required' });
@@ -40,12 +40,13 @@ router.post('/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const otpCode = generateOtp();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const lang = language === 'fr' ? 'fr' : 'en';
 
     // Self-signup is always Student — Counselor/Admin accounts are created by an Admin (see /create-staff).
     const user = existing
       ? await prisma.user.update({
           where: { id: existing.id },
-          data: { name, password: passwordHash, whatsapp, homeChurch: homeChurch ?? '', otpCode, otpExpiresAt },
+          data: { name, password: passwordHash, whatsapp, homeChurch: homeChurch ?? '', language: lang, otpCode, otpExpiresAt },
         })
       : await prisma.user.create({
           data: {
@@ -54,6 +55,7 @@ router.post('/signup', async (req, res) => {
             password: passwordHash,
             whatsapp,
             homeChurch: homeChurch ?? '',
+            language: lang,
             role: 'Student',
             otpCode,
             otpExpiresAt,

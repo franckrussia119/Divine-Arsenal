@@ -22,6 +22,7 @@ function shape(post: any, currentUserId?: string) {
     content: post.content,
     imageUrl: post.imageUrl ?? undefined,
     videoUrl: post.videoUrl ?? undefined,
+    audioUrl: post.audioUrl ?? undefined,
     likes: post.likes.length,
     prayerAgreements: post.agreements.length,
     dateStr: post.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -53,7 +54,7 @@ router.get('/posts', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
-  const { content, imageUrl, videoUrl, category, groupId, feedType } = req.body ?? {};
+  const { content, imageUrl, videoUrl, audioUrl, category, groupId, feedType } = req.body ?? {};
   if (!content) return res.status(400).json({ error: 'Post content is required' });
 
   if (groupId) {
@@ -68,6 +69,7 @@ router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
       content,
       imageUrl: imageUrl ?? null,
       videoUrl: videoUrl ?? null,
+      audioUrl: audioUrl ?? null,
       category: category ?? 'teaching',
       feedType: feedType === 'gather' ? 'gather' : 'city',
       authorId: req.userId!,

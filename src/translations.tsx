@@ -273,6 +273,10 @@ const translations = {
     // Profile picture
     changePhoto: 'Change photo',
     uploading: 'Uploading…',
+
+    // Music & Podcast
+    music: 'Music',
+    podcast: 'Podcast',
   },
   fr: {
     // Header & Navigation
@@ -544,6 +548,10 @@ const translations = {
     // Profile picture
     changePhoto: 'Changer la photo',
     uploading: 'Téléversement…',
+
+    // Music & Podcast
+    music: 'Musique',
+    podcast: 'Podcast',
   }
 };
 

@@ -14,7 +14,7 @@ interface DigitalCityHubProps {
   profile: UserProfile;
   posts: CommunityPost[];
   liveSessions: LiveSession[];
-  onCreatePost: (content: string, category: CommunityPost['category'], imageUrl?: string, videoUrl?: string) => void;
+  onCreatePost: (content: string, category: CommunityPost['category'], imageUrl?: string, videoUrl?: string, audioUrl?: string) => void;
   onLikePost: (id: string) => void;
   onAgreePost: (id: string) => void;
   onAddComment: (postId: string, text: string) => void;
@@ -48,8 +48,9 @@ export default function DigitalCityHub({
   const [gatherPostContent, setGatherPostContent] = useState('');
   const [gatherPostYoutube, setGatherPostYoutube] = useState(''); // holds an uploaded video URL now, not a pasted link
   const [gatherPostPhoto, setGatherPostPhoto] = useState(''); // holds an uploaded photo URL
+  const [gatherPostAudio, setGatherPostAudio] = useState(''); // holds an uploaded audio URL
   const [showGatherPhotoInput, setShowGatherPhotoInput] = useState(false);
-  const [gatherMediaUploading, setGatherMediaUploading] = useState<'image' | 'video' | null>(null);
+  const [gatherMediaUploading, setGatherMediaUploading] = useState<'image' | 'video' | 'audio' | null>(null);
   const [gatherMediaProgress, setGatherMediaProgress] = useState(0);
 
   type GatherPost = {
@@ -61,7 +62,7 @@ export default function DigitalCityHub({
     category: 'Sermon' | 'Testimony' | 'Devotional' | 'Prayer request' | 'Announcement';
     content: string;
     mediaUrl?: string;
-    mediaType?: 'photo' | 'video';
+    mediaType?: 'photo' | 'video' | 'audio';
     dateStr: string;
     likes: number;
     isLiked?: boolean;
@@ -76,8 +77,8 @@ export default function DigitalCityHub({
     authorRole: p.authorRole,
     category: (p.category as GatherPost['category']) || 'Devotional',
     content: p.content,
-    mediaUrl: p.imageUrl || p.videoUrl || undefined,
-    mediaType: p.imageUrl ? 'photo' : p.videoUrl ? 'video' : undefined,
+    mediaUrl: p.imageUrl || p.videoUrl || p.audioUrl || undefined,
+    mediaType: p.imageUrl ? 'photo' : p.videoUrl ? 'video' : p.audioUrl ? 'audio' : undefined,
     dateStr: p.dateStr,
     likes: p.likes,
     isLiked: p.isLiked,
@@ -105,7 +106,7 @@ export default function DigitalCityHub({
   const [gatherCommentsPostId, setGatherCommentsPostId] = useState<string | null>(null);
   const [newGatherCommentText, setNewGatherCommentText] = useState<{[key: string]: string}>({});
 
-  const handleGatherMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video') => {
+  const handleGatherMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video' | 'audio') => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
@@ -113,14 +114,15 @@ export default function DigitalCityHub({
       e.target.value = '';
       return;
     }
-    setGatherMediaUploading(kind === 'photo' ? 'image' : 'video');
+    setGatherMediaUploading(kind === 'photo' ? 'image' : kind);
     setGatherMediaProgress(0);
     try {
       const data = await uploadFile<{ url: string }>('/api/uploads/media', 'media', file, {
         onProgress: setGatherMediaProgress,
       });
-      if (kind === 'photo') { setGatherPostPhoto(data.url); setGatherPostYoutube(''); }
-      else { setGatherPostYoutube(data.url); setGatherPostPhoto(''); }
+      if (kind === 'photo') { setGatherPostPhoto(data.url); setGatherPostYoutube(''); setGatherPostAudio(''); }
+      else if (kind === 'video') { setGatherPostYoutube(data.url); setGatherPostPhoto(''); setGatherPostAudio(''); }
+      else { setGatherPostAudio(data.url); setGatherPostPhoto(''); setGatherPostYoutube(''); }
     } catch (err) {
       console.error('Gather media upload failed:', err);
       alert('Could not upload that file. Please try again.');
@@ -173,12 +175,14 @@ export default function DigitalCityHub({
         category: gatherPostCategory,
         imageUrl: gatherPostPhoto || undefined,
         videoUrl: gatherPostYoutube || undefined,
+        audioUrl: gatherPostAudio || undefined,
         feedType: 'gather',
       });
       setGatherPosts((prev) => [toGatherPost(res.post), ...prev]);
       setGatherPostContent('');
       setGatherPostYoutube('');
       setGatherPostPhoto('');
+      setGatherPostAudio('');
       setShowGatherPhotoInput(false);
     } catch (err) {
       console.error('Publish gather post failed:', err);
@@ -190,10 +194,11 @@ export default function DigitalCityHub({
   const [postCategory, setPostCategory] = useState<'testimony' | 'prophetic' | 'prayer-alarm' | 'teaching'>('prophetic');
   const [postImage, setPostImage] = useState('');
   const [postVideo, setPostVideo] = useState('');
-  const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | null>(null);
+  const [postAudio, setPostAudio] = useState('');
+  const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | 'audio' | null>(null);
   const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video') => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video' | 'audio') => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
@@ -201,14 +206,15 @@ export default function DigitalCityHub({
       e.target.value = '';
       return;
     }
-    setMediaUploading(kind === 'photo' ? 'image' : 'video');
+    setMediaUploading(kind === 'photo' ? 'image' : kind);
     setMediaUploadProgress(0);
     try {
       const data = await uploadFile<{ url: string }>('/api/uploads/media', 'media', file, {
         onProgress: setMediaUploadProgress,
       });
       if (kind === 'photo') setPostImage(data.url);
-      else setPostVideo(data.url);
+      else if (kind === 'video') setPostVideo(data.url);
+      else setPostAudio(data.url);
     } catch (err) {
       console.error('Media upload failed:', err);
       alert('Could not upload that file. Please try again.');
@@ -244,10 +250,11 @@ export default function DigitalCityHub({
     e.preventDefault();
     if (!postContent.trim()) return;
 
-    onCreatePost(postContent, postCategory, postImage || undefined, postVideo || undefined);
+    onCreatePost(postContent, postCategory, postImage || undefined, postVideo || undefined, postAudio || undefined);
     setPostContent('');
     setPostImage('');
     setPostVideo('');
+    setPostAudio('');
     setShowCreateForm(false);
   };
 
@@ -805,23 +812,43 @@ export default function DigitalCityHub({
                         required
                       />
 
-                      {/* Real video upload (max 50MB) */}
+                      {/* Real video upload (max 50MB, camera supported) */}
                       <label
                         htmlFor="gather-video-upload"
                         className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
                       >
                         <Video className="w-4 h-4" />
                         <span>
-                          {gatherMediaUploading === 'video' ? `Uploading… ${gatherMediaProgress}%` : gatherPostYoutube ? 'Video attached ✓' : 'Add a video (max 50MB)'}
+                          {gatherMediaUploading === 'video' ? `Uploading… ${gatherMediaProgress}%` : gatherPostYoutube ? 'Video attached ✓' : 'Add a video / camera (max 50MB)'}
                         </span>
                       </label>
                       <input
                         id="gather-video-upload"
                         type="file"
                         accept="video/*"
+                        capture="environment"
                         className="hidden"
                         disabled={!!gatherMediaUploading}
                         onChange={(e) => handleGatherMediaUpload(e, 'video')}
+                      />
+
+                      {/* Real audio upload (max 50MB) */}
+                      <label
+                        htmlFor="gather-audio-upload"
+                        className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
+                      >
+                        <Mic className="w-4 h-4" />
+                        <span>
+                          {gatherMediaUploading === 'audio' ? `Uploading… ${gatherMediaProgress}%` : gatherPostAudio ? 'Audio attached ✓' : 'Add audio'}
+                        </span>
+                      </label>
+                      <input
+                        id="gather-audio-upload"
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        disabled={!!gatherMediaUploading}
+                        onChange={(e) => handleGatherMediaUpload(e, 'audio')}
                       />
 
                       {/* Optional Photo Upload */}
@@ -832,12 +859,13 @@ export default function DigitalCityHub({
                             className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
                           >
                             <ImageIcon className="w-4 h-4" />
-                            <span>{gatherMediaUploading === 'image' ? `Uploading… ${gatherMediaProgress}%` : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo'}</span>
+                            <span>{gatherMediaUploading === 'image' ? `Uploading… ${gatherMediaProgress}%` : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo / camera'}</span>
                           </label>
                           <input
                             id="gather-photo-upload"
                             type="file"
                             accept="image/*"
+                            capture="environment"
                             className="hidden"
                             disabled={!!gatherMediaUploading}
                             onChange={(e) => handleGatherMediaUpload(e, 'photo')}
@@ -950,6 +978,12 @@ export default function DigitalCityHub({
                             {post.mediaUrl && post.mediaType === 'video' && (
                               <div className="border-t border-b border-slate-900 bg-black aspect-video relative">
                                 <video src={post.mediaUrl} controls className="w-full h-full" />
+                              </div>
+                            )}
+
+                            {post.mediaUrl && post.mediaType === 'audio' && (
+                              <div className="border-t border-b border-slate-900 bg-slate-900/60 px-5 py-3">
+                                <audio src={post.mediaUrl} controls className="w-full h-9" />
                               </div>
                             )}
 
@@ -1069,20 +1103,21 @@ export default function DigitalCityHub({
                           required
                         />
 
-                        {/* Media attachment uploads (real files, 50MB max) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Media attachment uploads (real files, 50MB max) — camera capture supported on mobile */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div>
                             <label
                               htmlFor="digital-city-photo-upload"
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <ImageIcon className="w-4 h-4" />
-                              <span>{mediaUploading === 'image' ? `Uploading… ${mediaUploadProgress}%` : postImage ? 'Photo attached ✓' : 'Add a photo'}</span>
+                              <span>{mediaUploading === 'image' ? `Uploading… ${mediaUploadProgress}%` : postImage ? 'Photo attached ✓' : 'Photo / camera'}</span>
                             </label>
                             <input
                               id="digital-city-photo-upload"
                               type="file"
                               accept="image/*"
+                              capture="environment"
                               className="hidden"
                               disabled={!!mediaUploading}
                               onChange={(e) => handleMediaUpload(e, 'photo')}
@@ -1094,15 +1129,33 @@ export default function DigitalCityHub({
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <Video className="w-4 h-4" />
-                              <span>{mediaUploading === 'video' ? `Uploading… ${mediaUploadProgress}%` : postVideo ? 'Video attached ✓' : 'Add a video (max 50MB)'}</span>
+                              <span>{mediaUploading === 'video' ? `Uploading… ${mediaUploadProgress}%` : postVideo ? 'Video attached ✓' : 'Video / camera'}</span>
                             </label>
                             <input
                               id="digital-city-video-upload"
                               type="file"
                               accept="video/*"
+                              capture="environment"
                               className="hidden"
                               disabled={!!mediaUploading}
                               onChange={(e) => handleMediaUpload(e, 'video')}
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="digital-city-audio-upload"
+                              className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
+                            >
+                              <Mic className="w-4 h-4" />
+                              <span>{mediaUploading === 'audio' ? `Uploading… ${mediaUploadProgress}%` : postAudio ? 'Audio attached ✓' : 'Add audio'}</span>
+                            </label>
+                            <input
+                              id="digital-city-audio-upload"
+                              type="file"
+                              accept="audio/*"
+                              className="hidden"
+                              disabled={!!mediaUploading}
+                              onChange={(e) => handleMediaUpload(e, 'audio')}
                             />
                           </div>
                         </div>
@@ -1187,6 +1240,12 @@ export default function DigitalCityHub({
                               className="w-full h-full"
                               poster="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&q=80&w=800"
                             />
+                          </div>
+                        )}
+
+                        {post.audioUrl && (
+                          <div className="border-t border-b border-slate-900 bg-slate-900/60 px-5 py-3">
+                            <audio src={post.audioUrl} controls className="w-full h-9" />
                           </div>
                         )}
 

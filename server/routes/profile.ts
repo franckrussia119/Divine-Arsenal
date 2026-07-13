@@ -4,7 +4,7 @@ import { requireAuth, AuthedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-const EDITABLE_FIELDS = ['name', 'bio', 'homeChurch', 'avatar', 'whatsapp'] as const;
+const EDITABLE_FIELDS = ['name', 'bio', 'homeChurch', 'avatar', 'whatsapp', 'language'] as const;
 
 router.patch('/', requireAuth, async (req: AuthedRequest, res) => {
   const data: Record<string, string> = {};

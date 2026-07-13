@@ -40,6 +40,8 @@ export default function Header({
           { label: t('myCourses'), tab: 'my-courses' },
           { label: t('warRoom'), tab: 'war-room' },
           { label: t('teachings'), tab: 'blog' },
+          { label: t('music'), tab: 'music' },
+          { label: t('podcast'), tab: 'podcast' },
           { label: t('profile'), tab: 'profile' },
         ]
       : currentRole === 'Counselor'
@@ -47,11 +49,15 @@ export default function Header({
           { label: t('carePortal'), tab: 'counselor-dashboard' },
           { label: t('digitalCity'), tab: 'community-city' },
           { label: t('groups'), tab: 'groups' },
+          { label: t('music'), tab: 'music' },
+          { label: t('podcast'), tab: 'podcast' },
         ]
       : [
           { label: t('adminConsole'), tab: 'admin-dashboard' },
           { label: t('digitalCity'), tab: 'community-city' },
           { label: t('groups'), tab: 'groups' },
+          { label: t('music'), tab: 'music' },
+          { label: t('podcast'), tab: 'podcast' },
         ];
 
   const [notifications, setNotifications] = useState<{ id: string; message: string; timeAgo: string; read: boolean }[]>([]);
@@ -233,6 +239,28 @@ export default function Header({
                   {t('teachings')}
                 </button>
                 <button
+                  onClick={() => onChangeTab('music')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'music' 
+                      ? 'text-brand-gold bg-brand-blue-900/40' 
+                      : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-student-music"
+                >
+                  {t('music')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('podcast')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'podcast' 
+                      ? 'text-brand-gold bg-brand-blue-900/40' 
+                      : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-student-podcast"
+                >
+                  {t('podcast')}
+                </button>
+                <button
                   onClick={() => onChangeTab('profile')}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     currentTab === 'profile' 
@@ -273,6 +301,24 @@ export default function Header({
                 >
                   {t('groups')}
                 </button>
+                <button
+                  onClick={() => onChangeTab('music')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'music' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-counselor-music"
+                >
+                  {t('music')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('podcast')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'podcast' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-counselor-podcast"
+                >
+                  {t('podcast')}
+                </button>
               </div>
             ) : (
               <div className="flex items-center space-x-1">
@@ -302,6 +348,24 @@ export default function Header({
                   id="tab-admin-groups"
                 >
                   {t('groups')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('music')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'music' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-admin-music"
+                >
+                  {t('music')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('podcast')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'podcast' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-admin-podcast"
+                >
+                  {t('podcast')}
                 </button>
               </div>
             )}

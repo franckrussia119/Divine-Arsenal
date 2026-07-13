@@ -20,6 +20,7 @@ export default function BlogView({
 }: BlogViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showImageLightbox, setShowImageLightbox] = useState(false);
 
   const categories = ['all', 'faith', 'prayer', 'family', 'leadership'];
 
@@ -166,7 +167,8 @@ export default function BlogView({
               <img
                 src={selectedPost.imageUrl}
                 alt={selectedPost.title}
-                className="w-full h-full object-cover opacity-75"
+                onClick={() => setShowImageLightbox(true)}
+                className="w-full h-full object-cover opacity-75 cursor-zoom-in"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-950 via-brand-blue-950/40 to-transparent"></div>
               
@@ -252,6 +254,28 @@ export default function BlogView({
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* Full-image lightbox */}
+      {showImageLightbox && selectedPost && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setShowImageLightbox(false)}
+        >
+          <button
+            onClick={() => setShowImageLightbox(false)}
+            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full transition-colors z-10"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={selectedPost.imageUrl}
+            alt={selectedPost.title}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 

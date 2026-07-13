@@ -11,20 +11,24 @@ import CounselorAdminDashboard from './components/CounselorAdminDashboard';
 import DigitalCityHub from './components/DigitalCityHub';
 import GroupsView from './components/GroupsView';
 import GroupDetailView from './components/GroupDetailView';
+import MusicView from './components/MusicView';
+import PodcastView from './components/PodcastView';
 import AuthScreen from './components/Auth/AuthScreen';
 
 import { UserRole, Course, BlogPost, PrayerPoint, JournalEntry, Message, CommunityPost, LiveSession } from './types';
 import { useAuth } from './context/AuthContext';
+import { useTranslation } from './translations';
 import { api } from './lib/api';
 
 // Tabs that require a signed-in account.
 const PROTECTED_TABS = new Set([
   'dashboard', 'my-courses', 'war-room', 'profile', 'community-city', 'groups',
-  'counselor-dashboard', 'admin-dashboard',
+  'counselor-dashboard', 'admin-dashboard', 'music', 'podcast',
 ]);
 
 export default function App() {
   const { user, loading: authLoading, logout, updateUser } = useAuth();
+  const { setLang } = useTranslation();
 
   const [currentTab, setCurrentTab] = useState<string>('visitor-home');
   const [showAuth, setShowAuth] = useState(false);
@@ -99,6 +103,13 @@ export default function App() {
     }, 4 * 60 * 1000);
     return () => clearTimeout(timer);
   }, [user]);
+
+  // Adapt the app's language to whatever the user chose at signup, every time they log in.
+  useEffect(() => {
+    if (user?.language === 'fr' || user?.language === 'en') {
+      setLang(user.language);
+    }
+  }, [user?.id]);
 
   const derivedProfile = useMemo(() => {
     if (!user) return null;
@@ -250,10 +261,11 @@ export default function App() {
     content: string,
     category: CommunityPost['category'],
     imageUrl?: string,
-    videoUrl?: string
+    videoUrl?: string,
+    audioUrl?: string
   ) => {
     try {
-      const res = await api.post<{ post: CommunityPost }>('/community/posts', { content, category, imageUrl, videoUrl });
+      const res = await api.post<{ post: CommunityPost }>('/community/posts', { content, category, imageUrl, videoUrl, audioUrl });
       setCommunityPosts((prev) => [res.post, ...prev]);
     } catch (err) {
       console.error('Create post failed:', err);
@@ -456,6 +468,10 @@ export default function App() {
                 <GroupsView onSelectGroup={setSelectedGroupId} />
               )
             )}
+
+            {currentTab === 'music' && derivedProfile && <MusicView profile={derivedProfile} />}
+
+            {currentTab === 'podcast' && derivedProfile && <PodcastView profile={derivedProfile} />}
 
             {((currentTab === 'counselor-dashboard' && currentRole === 'Counselor') ||
               (currentTab === 'admin-dashboard' && currentRole === 'Admin')) && (

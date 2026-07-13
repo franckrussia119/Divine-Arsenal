@@ -9,14 +9,16 @@ Telegram notification whenever someone signs up).
 ## What's in this version
 
 - **Real database** (Postgres + Prisma) — nothing lives only in the browser.
-- **Real accounts with email verification** — sign up sends a 6-digit code by email (via Resend); the account only activates once verified.
+- **Real accounts with email verification** — sign up sends a 6-digit code by email (via Resend); the account only activates once verified. **Choose English or French right at signup** — the app switches to that language immediately and again automatically every time that person logs in.
 - **WhatsApp number collected at signup**, and a **Telegram bot** pings you the moment a new (verified) user joins.
 - **Role-gated signup** — self-signup is always a Student account. Only an existing Admin can create Counselor or Admin accounts (Admin dashboard → "Create Counselor / Admin Account").
-- **Profile picture upload**, with a **real upload progress percentage** shown live (this applies to every upload in the app: avatar, course videos, and Zion Digital City photos/videos).
+- **Profile picture upload**, with a **real upload progress percentage** shown live (this applies to every upload in the app: avatar, course videos, music/podcast audio, and Zion Digital City photos/videos/audio).
 - **All courses are free**, and Admins can create/edit them, including uploading an actual video file for the first lesson (more modules/lessons can be added afterward via the API).
-- **Real photo/video uploads** in Zion Digital City (both the main feed and the Gather sub-feed) — 50MB max, actual files, not pasted links.
+- **Real photo, video, and audio uploads** in Zion Digital City (both the main feed and the Gather sub-feed) — 50MB max, actual files, not pasted links. Photo/video uploads also support taking a picture or recording video directly from the phone's camera, not just picking from the gallery.
+- **Music and Podcast libraries** — new nav sections. Admins/Counselors upload tracks (organized by artist and genre — Worship, Gospel, Hymn, etc.) and podcast episodes (organized by theme — Teaching, Testimony, Audio Bible, Prayer, Q&A, etc. — and a free-text category like a book of the Bible). Everyone can browse and listen; audio is a real uploaded file (up to 150MB, since sermons/audio-Bible chapters run long).
+- **Click any blog article's image to open it full-size** in a lightbox.
 - **Delete your own posts** (Admins can delete any post) in the main feed, Gather, and inside groups.
-- **Real in-app notifications** — the bell icon shows real, live activity (comments, likes, prayer agreements, counselor replies, new courses/teachings, live sessions, being added to a group), polling every 30 seconds.
+- **Real in-app notifications** — the bell icon shows real, live activity (comments, likes, prayer agreements, counselor replies, new courses/teachings/music/podcasts, live sessions, being added to a group), polling every 30 seconds.
 - **Groups** — anyone can create a group; others browse and join it Reddit-style. Group admins can add members directly by email, remove members, and each group has its own post feed.
 - **Admin analytics** — total users, students, counselors, enrollments, per-course enrollment/progress, and a full list of students with what they're enrolled in.
 - **Installable as a mobile app (PWA)** — a manifest, app icons generated from your logo, and a service worker mean visitors get "Add to Home Screen" / "Install App" on Android and iOS.
@@ -30,6 +32,9 @@ Telegram notification whenever someone signs up).
 - No real-time "who's online" presence tracking (would need WebSockets).
 - No password-reset email flow yet.
 - Notifications are in-app only (polling) — no push notifications to the phone's lock screen yet; that would need a separate VAPID/push-subscription setup.
+
+### About the notifications
+If the bell icon still isn't showing anything after this update, the most likely cause is the same one we've hit before: **the deployed app is running code from before this change.** Notifications need a brand-new database table (`Notification`) that only gets created when the container restarts with this updated `prisma/schema.prisma` — so push to GitHub and redeploy, the same way as always, and it should start working. If it's still empty after that, remember notifications only appear once something actually happens (someone comments/likes/prays on your post, a course is published, etc.) — a freshly seeded database won't have any yet.
 
 ---
 

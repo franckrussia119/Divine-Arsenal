@@ -10,7 +10,7 @@ interface AuthScreenProps {
 
 export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
   const { login, signup, verifyOtp, resendOtp, error, clearError, pendingEmail, clearPendingEmail } = useAuth();
-  const { t } = useTranslation();
+  const { t, setLang } = useTranslation();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -20,6 +20,7 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
   const [password, setPassword] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [homeChurch, setHomeChurch] = useState('');
+  const [signupLanguage, setSignupLanguage] = useState<'en' | 'fr'>('en');
   const [otpCode, setOtpCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +32,8 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
         await login(email, password);
         onDone();
       } else {
-        await signup(name, email, password, whatsapp, homeChurch);
+        setLang(signupLanguage); // adapt the app to their chosen language right away
+        await signup(name, email, password, whatsapp, signupLanguage, homeChurch);
       }
     } catch {
       // error already surfaced via context
@@ -195,6 +197,34 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
 
             {mode === 'signup' && (
               <>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Language / Langue</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSignupLanguage('en')}
+                      className={`py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+                        signupLanguage === 'en'
+                          ? 'bg-brand-gold text-brand-blue-950 border-brand-gold'
+                          : 'bg-white text-slate-600 border-slate-300 hover:border-brand-gold'
+                      }`}
+                    >
+                      English
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSignupLanguage('fr')}
+                      className={`py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+                        signupLanguage === 'fr'
+                          ? 'bg-brand-gold text-brand-blue-950 border-brand-gold'
+                          : 'bg-white text-slate-600 border-slate-300 hover:border-brand-gold'
+                      }`}
+                    >
+                      Français
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">{t('whatsappLabel')}</label>
                   <div className="relative">

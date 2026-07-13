@@ -8,7 +8,7 @@ interface AuthContextValue {
   error: string | null;
   pendingEmail: string | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, whatsapp: string, homeChurch?: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, whatsapp: string, language: string, homeChurch?: string) => Promise<void>;
   verifyOtp: (email: string, code: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   logout: () => void;
@@ -26,6 +26,7 @@ function toProfile(u: any): UserProfile {
     email: u.email,
     phone: u.phone ?? '',
     whatsapp: u.whatsapp ?? '',
+    language: u.language ?? 'en',
     role: u.role,
     bio: u.bio ?? '',
     homeChurch: u.homeChurch ?? '',
@@ -80,10 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signup = useCallback(
-    async (name: string, email: string, password: string, whatsapp: string, homeChurch?: string) => {
+    async (name: string, email: string, password: string, whatsapp: string, language: string, homeChurch?: string) => {
       setError(null);
       try {
-        const res = await api.post<{ pendingEmail: string }>('/auth/signup', { name, email, password, whatsapp, homeChurch });
+        const res = await api.post<{ pendingEmail: string }>('/auth/signup', { name, email, password, whatsapp, language, homeChurch });
         setPendingEmail(res.pendingEmail);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : 'Could not create your account. Please try again.');
