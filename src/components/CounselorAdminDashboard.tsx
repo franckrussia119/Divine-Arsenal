@@ -1,6 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Course, BlogPost, PrayerPoint } from '../types';
-import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame } from 'lucide-react';
+import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3 } from 'lucide-react';
+import { api, getToken } from '../lib/api';
+
+interface AdminStats {
+  totalUsers: number;
+  totalStudents: number;
+  totalCounselors: number;
+  totalAdmins: number;
+  totalEnrollments: number;
+  totalCourses: number;
+  totalPrayers: number;
+  totalPosts: number;
+  courses: { id: string; title: string; enrolledCount: number; totalLessons: number; avgProgress: number }[];
+}
+
+interface AdminStudent {
+  id: string;
+  name: string;
+  email: string;
+  whatsapp: string;
+  homeChurch: string;
+  joinedAt: string;
+  courses: { courseId: string; title: string; progress: number }[];
+}
 
 interface CounselorAdminDashboardProps {
   currentRole: 'Counselor' | 'Admin';
@@ -31,9 +54,68 @@ export default function CounselorAdminDashboard({
   const [courseSubtitle, setCourseSubtitle] = useState('');
   const [courseCategory, setCourseCategory] = useState('Spiritual Warfare');
   const [courseDesc, setCourseDesc] = useState('');
-  const [courseIsFree, setCourseIsFree] = useState(false);
+  const [courseIsFree, setCourseIsFree] = useState(true);
   const [coursePrice, setCoursePrice] = useState('$19');
   const [courseImg, setCourseImg] = useState('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800');
+  const [courseVideoUrl, setCourseVideoUrl] = useState('');
+  const [courseVideoUploading, setCourseVideoUploading] = useState(false);
+
+  // Admin-only: staff account creation
+  const [staffName, setStaffName] = useState('');
+  const [staffEmail, setStaffEmail] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
+  const [staffRole, setStaffRole] = useState<'Counselor' | 'Admin'>('Counselor');
+  const [staffCreating, setStaffCreating] = useState(false);
+
+  // Admin-only: platform stats
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [students, setStudents] = useState<AdminStudent[]>([]);
+
+  useEffect(() => {
+    if (currentRole !== 'Admin') return;
+    api.get<AdminStats>('/admin/stats').then(setStats).catch(console.error);
+    api.get<{ students: AdminStudent[] }>('/admin/students').then((res) => setStudents(res.students)).catch(console.error);
+  }, [currentRole]);
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCourseVideoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('video', file);
+      const res = await fetch('/api/uploads/video', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      setCourseVideoUrl(data.url);
+    } catch (err) {
+      console.error('Video upload failed:', err);
+      alert('Could not upload that video. Please try a smaller file.');
+    } finally {
+      setCourseVideoUploading(false);
+    }
+  };
+
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!staffName || !staffEmail || !staffPassword) return;
+    setStaffCreating(true);
+    try {
+      await api.post('/auth/create-staff', { name: staffName, email: staffEmail, password: staffPassword, role: staffRole });
+      triggerNotification(`${staffRole} account created for ${staffName}!`);
+      setStaffName('');
+      setStaffEmail('');
+      setStaffPassword('');
+    } catch (err: any) {
+      alert(err?.message || 'Could not create that account.');
+    } finally {
+      setStaffCreating(false);
+    }
+  };
 
   // Blog Form State
   const [postTitle, setPostTitle] = useState('');
@@ -76,6 +158,7 @@ export default function CounselorAdminDashboard({
               duration: '15 mins',
               videoDuration: '15:00',
               completed: false,
+              videoUrl: courseVideoUrl || undefined,
               keyVerse: 'Colossians 1:13 - "He has delivered us from the domain of darkness and transferred us to the kingdom of his beloved Son."'
             }
           ]
@@ -90,6 +173,7 @@ export default function CounselorAdminDashboard({
     setCourseTitle('');
     setCourseSubtitle('');
     setCourseDesc('');
+    setCourseVideoUrl('');
   };
 
   const handleCreateBlogPost = (e: React.FormEvent) => {
@@ -315,6 +399,28 @@ export default function CounselorAdminDashboard({
                   />
                 </div>
 
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">First Lesson Video</label>
+                  <label
+                    htmlFor="course-video-upload"
+                    className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>
+                      {courseVideoUploading ? 'Uploading…' : courseVideoUrl ? 'Video uploaded — click to replace' : 'Click to upload a video file'}
+                    </span>
+                  </label>
+                  <input
+                    id="course-video-upload"
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    disabled={courseVideoUploading}
+                    onChange={handleVideoUpload}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">You can add more modules/lessons to this course afterward.</p>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full py-3 bg-brand-blue-950 text-white font-bold uppercase tracking-wider rounded-xl hover:bg-brand-blue-900 cursor-pointer"
@@ -388,6 +494,136 @@ export default function CounselorAdminDashboard({
               </form>
             </div>
 
+          </div>
+        )}
+
+        {/* 4. ADMIN-ONLY: PLATFORM STATS + STAFF ACCOUNT CREATION */}
+        {currentRole === 'Admin' && (
+          <div className="mt-8 space-y-8">
+
+            {/* Platform Overview */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4 flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2 text-brand-gold" /> Platform Overview
+              </h3>
+              {!stats ? (
+                <p className="text-xs text-slate-400">Loading stats…</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'Total Users', value: stats.totalUsers },
+                      { label: 'Students', value: stats.totalStudents },
+                      { label: 'Counselors', value: stats.totalCounselors },
+                      { label: 'Enrollments', value: stats.totalEnrollments },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                        <div className="text-2xl font-bold text-brand-blue-950 font-serif">{s.value}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-mono mt-1">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block mb-2">Enrollment by course</span>
+                  <div className="space-y-2">
+                    {stats.courses.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between text-xs p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <span className="font-semibold text-slate-700">{c.title}</span>
+                        <span className="text-slate-500 font-mono">{c.enrolledCount} enrolled · avg {c.avgProgress}% complete</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+              {/* Create Staff Account */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4 flex items-center">
+                  <Users className="w-5 h-5 mr-2 text-brand-gold" /> Create Counselor / Admin Account
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  Only Admins can create Counselor or Admin accounts — everyone else signs up as a Student.
+                </p>
+                <form onSubmit={handleCreateStaff} className="space-y-4 text-xs">
+                  <input
+                    type="text"
+                    value={staffName}
+                    onChange={(e) => setStaffName(e.target.value)}
+                    placeholder="Full name"
+                    className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                    required
+                  />
+                  <input
+                    type="email"
+                    value={staffEmail}
+                    onChange={(e) => setStaffEmail(e.target.value)}
+                    placeholder="Email"
+                    className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                    required
+                  />
+                  <input
+                    type="password"
+                    value={staffPassword}
+                    onChange={(e) => setStaffPassword(e.target.value)}
+                    placeholder="Temporary password (min 8 characters)"
+                    minLength={8}
+                    className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                    required
+                  />
+                  <select
+                    value={staffRole}
+                    onChange={(e) => setStaffRole(e.target.value as 'Counselor' | 'Admin')}
+                    className="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50"
+                  >
+                    <option value="Counselor">Counselor</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={staffCreating}
+                    className="w-full py-3 bg-brand-blue-950 text-white font-bold uppercase tracking-wider rounded-xl hover:bg-brand-blue-900 cursor-pointer disabled:opacity-60"
+                  >
+                    {staffCreating ? 'Creating…' : 'Create Account'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Enrolled Students */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4 flex items-center">
+                  <GraduationCap className="w-5 h-5 mr-2 text-brand-gold" /> Enrolled Students ({students.length})
+                </h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                  {students.length === 0 ? (
+                    <p className="text-xs text-slate-400">No students yet.</p>
+                  ) : (
+                    students.map((s) => (
+                      <div key={s.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                        <div className="flex justify-between items-start">
+                          <span className="font-semibold text-slate-700">{s.name}</span>
+                          <span className="text-slate-400 font-mono text-[10px]">{s.email}</span>
+                        </div>
+                        {s.courses.length === 0 ? (
+                          <p className="text-slate-400 mt-1">Not enrolled in any course yet.</p>
+                        ) : (
+                          <ul className="mt-1 space-y-0.5">
+                            {s.courses.map((c) => (
+                              <li key={c.courseId} className="text-slate-500">
+                                {c.title} — <span className="font-mono">{c.progress}%</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+            </div>
           </div>
         )}
 

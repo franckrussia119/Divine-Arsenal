@@ -207,4 +207,54 @@ router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: Aut
   }
 });
 
+// Admin/Counselor: edit an existing course's basic details.
+router.patch('/:id', requireAuth, requireRole('Admin', 'Counselor'), async (req: AuthedRequest, res) => {
+  const { title, subtitle, category, duration, description, isFree, price, imageUrl } = req.body ?? {};
+  const data: Record<string, any> = {};
+  if (title !== undefined) data.title = title;
+  if (subtitle !== undefined) data.subtitle = subtitle;
+  if (category !== undefined) data.category = category;
+  if (duration !== undefined) data.duration = duration;
+  if (description !== undefined) data.description = description;
+  if (isFree !== undefined) data.isFree = isFree;
+  if (price !== undefined) data.price = price;
+  if (imageUrl !== undefined) data.imageUrl = imageUrl;
+
+  const course = await prisma.course.update({ where: { id: req.params.id }, data, include: courseInclude });
+  res.json({ course: shapeCatalogCourse(course) });
+});
+
+// Admin/Counselor: add a new module (with lessons) to an existing course.
+router.post('/:id/modules', requireAuth, requireRole('Admin', 'Counselor'), async (req: AuthedRequest, res) => {
+  const { title, lessons } = req.body ?? {};
+  if (!title) return res.status(400).json({ error: 'Module title is required' });
+
+  const existingModules = await prisma.courseModule.count({ where: { courseId: req.params.id } });
+
+  await prisma.courseModule.create({
+    data: {
+      title,
+      order: existingModules,
+      courseId: req.params.id,
+      lessons: {
+        create: (lessons ?? []).map((l: any, li: number) => ({
+          title: l.title,
+          duration: l.duration ?? '',
+          videoDuration: l.videoDuration ?? '',
+          videoUrl: l.videoUrl ?? null,
+          keyVerse: l.keyVerse ?? null,
+          keyVerseRef: l.keyVerseRef ?? null,
+          practices: l.practices ?? [],
+          content: l.content ?? null,
+          order: li,
+        })),
+      },
+    },
+  });
+
+  const course = await prisma.course.findUnique({ where: { id: req.params.id }, include: courseInclude });
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+  res.status(201).json({ course: shapeCatalogCourse(course) });
+});
+
 export default router;

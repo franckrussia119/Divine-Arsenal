@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { UserProfile, Course } from '../types';
 import { Award, Shield, Key, Sparkles, CheckCircle, FileText, X, Download, HelpCircle, Flame, Mail, Phone, Church, Save, Calendar } from 'lucide-react';
+import { getToken } from '../lib/api';
+import { useTranslation } from '../translations';
 
 interface ProfileViewProps {
   profile: UserProfile;
@@ -18,8 +20,35 @@ export default function ProfileView({
   const [editName, setEditName] = useState(profile.name);
   const [editEmail, setEditEmail] = useState(profile.email);
   const [editPhone, setEditPhone] = useState(profile.phone);
+  const [editWhatsapp, setEditWhatsapp] = useState(profile.whatsapp);
   const [editChurch, setEditChurch] = useState(profile.homeChurch);
   const [editBio, setEditBio] = useState(profile.bio);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const { t } = useTranslation();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await fetch('/api/uploads/avatar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      onUpdateProfile({ avatar: data.user.avatar });
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('Could not upload that photo. Please try a smaller image file.');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
+  };
 
   // Certificate Modal State
   const [showCertificate, setShowCertificate] = useState(false);
@@ -31,6 +60,7 @@ export default function ProfileView({
       name: editName,
       email: editEmail,
       phone: editPhone,
+      whatsapp: editWhatsapp,
       homeChurch: editChurch,
       bio: editBio
     });
@@ -52,11 +82,25 @@ export default function ProfileView({
       <div className="bg-brand-blue-950 text-white py-12 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-6">
-          <div className="w-24 h-24 rounded-full border-2 border-brand-gold p-1 shrink-0">
+          <div className="w-24 h-24 rounded-full border-2 border-brand-gold p-1 shrink-0 relative group">
             <img
               src={profile.avatar}
               alt={profile.name}
               className="w-full h-full rounded-full object-cover"
+            />
+            <label
+              htmlFor="avatar-upload-input"
+              className="absolute inset-1 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity duration-200 text-[10px] text-white font-semibold text-center px-1"
+            >
+              {avatarUploading ? t('uploading') : t('changePhoto')}
+            </label>
+            <input
+              id="avatar-upload-input"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={avatarUploading}
+              onChange={handleAvatarChange}
             />
           </div>
           <div className="text-center md:text-left flex-1">
@@ -119,6 +163,15 @@ export default function ProfileView({
                       type="text"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
+                      className="w-full p-2.5 text-xs sm:text-sm border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">{t('whatsappLabel')}</label>
+                    <input
+                      type="text"
+                      value={editWhatsapp}
+                      onChange={(e) => setEditWhatsapp(e.target.value)}
                       className="w-full p-2.5 text-xs sm:text-sm border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
                     />
                   </div>

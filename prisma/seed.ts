@@ -13,6 +13,7 @@ async function upsertUser(data: {
   bio?: string;
   homeChurch?: string;
   avatar?: string;
+  whatsapp?: string;
   streak?: number;
   plan?: string;
   planPrice?: string;
@@ -22,7 +23,7 @@ async function upsertUser(data: {
   return prisma.user.upsert({
     where: { email: data.email },
     update: {},
-    create: { ...data, password: passwordHash },
+    create: { ...data, password: passwordHash, emailVerified: true },
   });
 }
 
@@ -36,6 +37,7 @@ async function main() {
     bio: 'Seeking to walk in the fullness of apostolic authority and build a disciplined life of prayer.',
     homeChurch: 'Covenant Chapel, Lagos',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150',
+    whatsapp: '+237600000000',
     streak: 12,
     plan: 'All-Access Member',
     planPrice: '$15 / month',
@@ -85,8 +87,8 @@ async function main() {
         duration: '6 hours',
         description:
           'Learn the systemic strategies of prayer, understanding divine courtrooms, territorial spirits, and the power of anointed decrees to manifest breakthrough.',
-        isFree: false,
-        price: '$29',
+        isFree: true,
+        price: null,
         imageUrl: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&q=80&w=800',
         modules: {
           create: [
@@ -198,8 +200,8 @@ async function main() {
         duration: '3 hours',
         description:
           'Walk step-by-step through the 21-day Daniel Fast. Learn the spiritual protocols of continuous focus, prophetic interpretation, and dream discernment.',
-        isFree: false,
-        price: '$19',
+        isFree: true,
+        price: null,
         imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800',
         modules: {
           create: [
@@ -248,8 +250,8 @@ async function main() {
         duration: '5 hours',
         description:
           'An advanced curriculum on developing a sensitive spirit, interpreting dreams, discerning spiritual atmospheres, and casting out negative spiritual entities.',
-        isFree: false,
-        price: '$35',
+        isFree: true,
+        price: null,
         imageUrl: 'https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?auto=format&fit=crop&q=80&w=800',
         modules: {
           create: [

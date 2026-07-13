@@ -25,11 +25,17 @@ model User {
   bio        String   @default("")
   homeChurch String   @default("")
   avatar     String   @default("")
+  whatsapp   String   @default("")
   streak     Int      @default(0)
   plan       String   @default("Free Access")
   planPrice  String   @default("$0/mo")
   renewsDate String   @default("")
   createdAt  DateTime @default(now())
+
+  // Email verification (OTP)
+  emailVerified  Boolean   @default(false)
+  otpCode        String?
+  otpExpiresAt   DateTime?
 
   enrollments       Enrollment[]
   prayerPoints      PrayerPoint[]
@@ -42,6 +48,8 @@ model User {
   communityComments CommunityComment[]
   communityLikes    CommunityLike[]
   communityAgrees   CommunityAgreement[]
+  groupsCreated     Group[]
+  groupMemberships  GroupMembership[]
 }
 
 model Course {
@@ -227,4 +235,28 @@ model LiveSession {
   scheduledTime String?
   category      String   @default("Teaching Masterclass")
   createdAt     DateTime @default(now())
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  imageUrl    String   @default("")
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  members GroupMembership[]
+}
+
+model GroupMembership {
+  id       String   @id @default(cuid())
+  groupId  String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("member") // "member" | "admin"
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, userId])
 }

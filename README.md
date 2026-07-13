@@ -1,134 +1,116 @@
 # Divine Arsenal
 
-A discipleship / prayer / community platform: courses with lessons, a blog, a
-prayer wall, a personal journal, counselor messaging, and a community feed —
-all backed by a **real PostgreSQL database** with **real user accounts**
-(sign up / log in). Nothing lives only in the browser anymore: refresh the
-page, close the tab, or have two different people open it at once, and
-everything is still there, correctly separated per account.
+A discipleship / prayer / community platform: free courses with video lessons,
+a blog, a prayer wall, a personal journal, counselor messaging, a community
+feed, and groups — all backed by a **real PostgreSQL database** with **real
+user accounts** (email OTP verification, WhatsApp number collection, and a
+Telegram notification whenever someone signs up).
 
-## What changed from the original prototype
+## What's in this version
 
-The original version was a single React app with all its "data" hardcoded in
-`src/data.ts`. It looked complete but nothing ever saved. This version adds:
+- **Real database** (Postgres + Prisma) — nothing lives only in the browser.
+- **Real accounts with email verification** — sign up sends a 6-digit code by email (via Resend); the account only activates once verified.
+- **WhatsApp number collected at signup**, and a **Telegram bot** pings you the moment a new (verified) user joins.
+- **Role-gated signup** — self-signup is always a Student account. Only an existing Admin can create Counselor or Admin accounts (Admin dashboard → "Create Counselor / Admin Account").
+- **Profile picture upload** — click your avatar on the Profile page.
+- **All courses are free**, and Admins can create/edit them, including uploading an actual video file for the first lesson (more modules/lessons can be added afterward via the API).
+- **Groups** — anyone can create a group and others can join/leave it.
+- **Admin analytics** — total users, students, counselors, enrollments, per-course enrollment/progress, and a full list of students with what they're enrolled in.
+- **English / French** — a language switcher in the header; the mechanism (`src/translations.tsx`) covers navigation, auth, groups, and admin screens. Some older screens still have English-only strings — extending coverage there is a good next task, the pattern is already in place.
+- Your logo is now in the header and as a watermark on the homepage hero.
 
-- A **Postgres database** (via [Prisma](https://www.prisma.io/)) — see `prisma/schema.prisma`
-- A real **Express API** (`server/`) with routes for auth, courses, blog, prayers, journal, messages, and the community feed
-- **Real accounts**: email + password, hashed with bcrypt, sessions via JWT
-- **Docker** files so it can be built and deployed as a container (works with Coolify)
-
-### Known limitations (good next steps, not yet built)
-- The "Gather" sub-feed and the live-video "Sanctuary" chat inside the Community City tab are still local-only simulations (not persisted) — the main community feed (posts, likes, prayer-agreements, comments) *is* fully real and persisted.
-- There's one shared counselor "inbox" — messages route to a single designated counselor account rather than a full multi-counselor assignment system.
-- No password-reset email flow yet (if someone forgets their password today, you'd reset it directly in the database).
+### Known limitations (still local-only, not persisted)
+- The "Gather" sub-feed and the live-video "Sanctuary" chat inside Community City are still local-only — no fake data anymore, but nothing typed there saves to the database yet.
+- No real-time "who's online" presence tracking (would need WebSockets).
+- No password-reset email flow yet.
 
 ---
 
-## 1. Run it locally
+## 1. New setup steps for this version
 
-You have two options. If you don't want to install Node.js at all, use **Option A**.
+Beyond the database, you now need two more (free) external services.
+
+### Resend (for OTP emails)
+1. Sign up free at [resend.com](https://resend.com).
+2. Create an API key.
+3. For real production email, verify your own domain in Resend. To just get started immediately, use their built-in test sender `onboarding@resend.dev` as `RESEND_FROM_EMAIL` — it works right away but can only send to your own Resend account's email address until you verify a domain.
+
+### Telegram bot (for new-signup notifications)
+1. In Telegram, message **@BotFather**, send `/newbot`, and follow the prompts. It gives you a **bot token**.
+2. Send your new bot any message (e.g. "hi").
+3. Visit `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser — find `"chat":{"id": ...}` in the response. That number is your `TELEGRAM_ADMIN_CHAT_ID`.
+
+Add both sets of values to your `.env` (see `.env.example` for the full list, including `UPLOADS_DIR` for profile pictures/videos).
+
+---
+
+## 2. Run it locally
 
 ### Option A — Docker only (recommended if you're not a developer)
 
-**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+1. `cp .env.example .env` and fill in `JWT_SECRET`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID`.
+2. `docker compose up --build`
+3. First time only, seed demo content: `docker compose exec app npx tsx prisma/seed.ts`
+4. Open **http://localhost:4000**
 
-1. Open a terminal in this project folder.
-2. Copy the environment template and set a real secret:
-   ```
-   cp .env.example .env
-   ```
-   Open `.env` and replace `JWT_SECRET` with a long random string (any random
-   sentence of gibberish works — this is what secures login sessions).
-3. Start everything:
-   ```
-   docker compose up --build
-   ```
-4. The first time only, load the demo content into the database (open a second terminal, keep the first one running):
-   ```
-   docker compose exec app npx tsx prisma/seed.ts
-   ```
-5. Open **http://localhost:4000** in your browser.
-
-Demo logins it creates (password for all of them: `Password123!`):
-- Student: `daniel@divinearsenal.org`
-- Counselor: `sarah@divinearsenal.org`
-- Admin: `joel@divinearsenal.org`
-
-You can also just sign up your own account from the app itself — new sign-ups
-become Students by default.
-
-To stop it: `Ctrl+C`, then `docker compose down` (add `-v` to also wipe the database).
+Demo logins (password `Password123!` for all): `daniel@divinearsenal.org` (Student), `sarah@divinearsenal.org` (Counselor), `joel@divinearsenal.org` (Admin). These are pre-verified so you can log straight in without the OTP step.
 
 ### Option B — Node.js + Docker (for active development)
 
-**Prerequisites:** Node.js 20+, and Docker Desktop just for the database.
-
-1. `cp .env.example .env` and set `JWT_SECRET`.
-2. Start only the database: `docker compose up db -d`
-3. Install dependencies: `npm install`
-4. Push the schema to the database: `npm run prisma:migrate:dev` (first time it'll ask for a migration name — anything like `init` is fine)
-5. Seed demo content: `npm run db:seed`
-6. Run the app (frontend + backend together, with hot reload): `npm run dev`
-7. Open **http://localhost:3000**
+1. `cp .env.example .env` and fill in the same values as above.
+2. `docker compose up db -d`
+3. `npm install`
+4. `npm run prisma:migrate:dev`
+5. `npm run db:seed`
+6. `npm run dev` → **http://localhost:3000**
 
 ---
 
-## 2. Push it to GitHub
+## 3. Push it to GitHub
 
-If you've never used git before, here's the whole flow:
+```
+git init
+git add .
+git commit -m "Divine Arsenal: OTP signup, groups, admin analytics, uploads"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+git push -u origin main
+```
 
-1. Create a new empty repository on [github.com](https://github.com/new) — don't check any of the "add a README/.gitignore" boxes, since this project already has its own.
-2. In your terminal, in this project folder:
-   ```
-   git init
-   git add .
-   git commit -m "Divine Arsenal: real database, real accounts"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
-   git push -u origin main
-   ```
-3. Refresh the GitHub page — your code is now there.
-
-Your `.env` file is deliberately excluded from git (see `.gitignore`) so your
-real `JWT_SECRET` and database password never get pushed publicly. Only
-`.env.example` (the template, with placeholder values) is committed.
+Your `.env` never gets pushed (see `.gitignore`) — only `.env.example`.
 
 ---
 
-## 3. Deploy on Coolify
+## 4. Deploy on Coolify
 
-Coolify can build straight from your GitHub repo using the Dockerfile in this project.
+Same as before, with two additions:
 
-1. In Coolify, click **+ New Resource → Application**, and connect it to your GitHub repo (Coolify will ask to install its GitHub App the first time).
-2. Build pack: choose **Dockerfile** (Coolify should auto-detect the `Dockerfile` at the repo root).
-3. Add a **Postgres database**: **+ New Resource → Database → PostgreSQL**. Once it's created, copy its **internal connection string** (Coolify shows this on the database's page — it'll look like `postgresql://user:pass@servicename:5432/dbname`).
-4. Back on your application's **Environment Variables** page, add:
-   - `DATABASE_URL` = the Postgres connection string from step 3
-   - `JWT_SECRET` = a long random string (generate one with `openssl rand -base64 32` in any terminal)
-   - `NODE_ENV` = `production`
-   - `PORT` = `4000`
-5. Under the application's **Networking** settings, set the port to `4000` (matches `EXPOSE 4000` in the Dockerfile) and attach your domain there.
-6. Click **Deploy**. Coolify builds the image, and the container's start-up script (`docker-entrypoint.sh`) automatically syncs the database schema before starting the server — you don't need to run any migration command by hand.
-7. Once it's live, seed demo content the same way as local Docker, but via Coolify's terminal for that service (Coolify → your app → **Terminal** tab):
-   ```
-   npx tsx prisma/seed.ts
-   ```
-   (Or skip this — real users can just sign up.)
-
-From then on, pushing new commits to your GitHub repo's `main` branch and
-clicking **Deploy** in Coolify (or turning on auto-deploy) ships updates.
+1. Create the app (Dockerfile build pack) and a separate **Postgres** resource, same as previously.
+2. On the app's **Environment Variables** tab, add all of: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `PORT=4000`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID`, `UPLOADS_DIR=/app/uploads`. Mark `NODE_ENV` as **runtime-only** (not available at buildtime), same as before.
+3. **New: add persistent storage for uploads.** On the app resource, find the **Storages** (or "Persistent Storage" / "Volumes") tab and add a new volume/mount with:
+   - **Destination path**: `/app/uploads`
+   - This is exactly like the Postgres volume — without it, uploaded profile pictures and videos would be wiped out on every redeploy.
+4. Deploy. The container syncs the database schema automatically on startup, same as before.
+5. Seed demo content the same way as local Docker, via Coolify's **Terminal** tab: `npx tsx prisma/seed.ts`.
 
 ---
 
 ## Project structure
 
 ```
-prisma/schema.prisma     the database structure
+prisma/schema.prisma     database structure (Users, Courses, Groups, Prayers, etc.)
 prisma/seed.ts           demo accounts + sample content
-server/                  the Express API (auth, courses, blog, prayers, journal, messages, community)
-src/                     the React frontend
-src/lib/api.ts           frontend's API client
-src/context/AuthContext  signed-in user state, login/signup/logout
+server/                  Express API — auth (incl. OTP), courses, blog, prayers,
+                          journal, messages, community, groups, admin, uploads
+server/lib/email.ts      Resend OTP emails
+server/lib/telegram.ts   Telegram new-signup notifications
+server/lib/uploads.ts    multer config for avatars & lesson videos
+src/                     React frontend
+src/lib/api.ts           frontend's JSON API client
+src/context/AuthContext  signed-in user state, OTP signup/verify/login/logout
+src/translations.tsx     English/French dictionary + language switcher
+public/logo.png          your logo, used in the header and homepage hero
 Dockerfile               builds frontend + backend into one container
-docker-compose.yml       app + Postgres, for local dev or Coolify's Compose deploy option
+docker-compose.yml       app + Postgres, with an uploads volume
 ```
+

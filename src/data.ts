@@ -5,6 +5,7 @@ export const initialProfile: UserProfile = {
   name: 'Daniel Okafor',
   email: 'daniel.okafor@divinearsenal.org',
   phone: '+234 812 345 6789',
+  whatsapp: '+234 812 345 6789',
   role: 'Student',
   bio: 'Seeking to walk in the fullness of apostolic authority and build a disciplined life of prayer.',
   homeChurch: 'Covenant Chapel, Lagos',

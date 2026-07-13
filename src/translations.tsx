@@ -224,6 +224,55 @@ const translations = {
     staffAuthorizationLevel: 'Staff Covenant Authorization Level',
     fiftyYearMandateTitle: 'The 50-Year Spiritual Zoom Mandate',
     fiftyYearMandateDesc: 'You are in a synchronized prophetic gateway. Every declaration, flame trigger, and spoken word coordinates directly with the Watchmen team on active intercessory shifts worldwide. Turn on your audio, speak bold decrees, and hold the corporate fortress together.',
+
+    // Auth / OTP
+    welcomeBack: 'Welcome back',
+    createYourAccount: 'Create your account',
+    signInToContinue: 'Sign in to continue your journey.',
+    joinToSave: 'Join Divine Arsenal to save your progress, prayers, and journal.',
+    fullName: 'Full name',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
+    whatsappLabel: 'WhatsApp number',
+    whatsappPlaceholder: 'e.g. +237 6XX XXX XXX',
+    homeChurchOptional: 'Home church (optional)',
+    signIn: 'Sign In',
+    createAccount: 'Create Account',
+    noAccount: "Don't have an account?",
+    haveAccount: 'Already have an account?',
+    signUp: 'Sign up',
+    logIn: 'Log in',
+    back: 'Back',
+    verifyYourEmail: 'Verify your email',
+    otpSentTo: "We've sent a 6-digit code to",
+    enterCode: 'Enter code',
+    verify: 'Verify',
+    resendCode: "Didn't get it? Resend code",
+    codeSent: 'A new code has been sent.',
+
+    // Groups
+    groups: 'Groups',
+    createGroup: 'Create a Group',
+    groupName: 'Group name',
+    groupDescription: 'Description',
+    joinGroup: 'Join',
+    leaveGroup: 'Leave',
+    members: 'members',
+    noGroupsYet: 'No groups yet — start one!',
+
+    // Admin
+    platformOverview: 'Platform Overview',
+    totalUsers: 'Total Users',
+    totalStudents: 'Students',
+    totalCounselors: 'Counselors',
+    totalEnrollments: 'Enrollments',
+    createStaffAccount: 'Create Counselor / Admin Account',
+    role: 'Role',
+    enrolledStudents: 'Enrolled Students',
+
+    // Profile picture
+    changePhoto: 'Change photo',
+    uploading: 'Uploading…',
   },
   fr: {
     // Header & Navigation
@@ -446,6 +495,55 @@ const translations = {
     staffAuthorizationLevel: 'Niveau d\'Autorisation de l\'Alliance du Personnel',
     fiftyYearMandateTitle: 'Le Mandat Zoom Spirituel pour les 50 Prochaines Années',
     fiftyYearMandateDesc: 'Vous êtes dans un portail prophétique synchronisé. Chaque déclaration, activation de flamme et parole proclamée est coordonnée en temps réel avec l\'équipe des sentinelles en service d\'intercession active dans le monde entier. Activez votre son, proclamez des décrets puissants, et gardez ensemble la forteresse spirituelle.',
+
+    // Auth / OTP
+    welcomeBack: 'Bon retour',
+    createYourAccount: 'Créez votre compte',
+    signInToContinue: 'Connectez-vous pour continuer votre parcours.',
+    joinToSave: 'Rejoignez Divine Arsenal pour sauvegarder votre progression, vos prières et votre journal.',
+    fullName: 'Nom complet',
+    emailLabel: 'Email',
+    passwordLabel: 'Mot de passe',
+    whatsappLabel: 'Numéro WhatsApp',
+    whatsappPlaceholder: 'ex. +237 6XX XXX XXX',
+    homeChurchOptional: 'Église d\'origine (optionnel)',
+    signIn: 'Se connecter',
+    createAccount: 'Créer le compte',
+    noAccount: "Vous n'avez pas de compte ?",
+    haveAccount: 'Vous avez déjà un compte ?',
+    signUp: "S'inscrire",
+    logIn: 'Se connecter',
+    back: 'Retour',
+    verifyYourEmail: 'Vérifiez votre email',
+    otpSentTo: 'Nous avons envoyé un code à 6 chiffres à',
+    enterCode: 'Entrez le code',
+    verify: 'Vérifier',
+    resendCode: 'Pas reçu ? Renvoyer le code',
+    codeSent: 'Un nouveau code a été envoyé.',
+
+    // Groups
+    groups: 'Groupes',
+    createGroup: 'Créer un groupe',
+    groupName: 'Nom du groupe',
+    groupDescription: 'Description',
+    joinGroup: 'Rejoindre',
+    leaveGroup: 'Quitter',
+    members: 'membres',
+    noGroupsYet: 'Pas encore de groupes — créez-en un !',
+
+    // Admin
+    platformOverview: 'Aperçu de la Plateforme',
+    totalUsers: 'Utilisateurs Totaux',
+    totalStudents: 'Étudiants',
+    totalCounselors: 'Conseillers',
+    totalEnrollments: 'Inscriptions',
+    createStaffAccount: 'Créer un Compte Conseiller / Admin',
+    role: 'Rôle',
+    enrolledStudents: 'Étudiants Inscrits',
+
+    // Profile picture
+    changePhoto: 'Changer la photo',
+    uploading: 'Téléversement…',
   }
 };
 

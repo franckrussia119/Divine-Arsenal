@@ -4,15 +4,12 @@ import { requireAuth, AuthedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-const EDITABLE_FIELDS = ['name', 'bio', 'homeChurch', 'avatar', 'phone'] as const;
+const EDITABLE_FIELDS = ['name', 'bio', 'homeChurch', 'avatar', 'whatsapp'] as const;
 
 router.patch('/', requireAuth, async (req: AuthedRequest, res) => {
   const data: Record<string, string> = {};
   for (const field of EDITABLE_FIELDS) {
     if (typeof req.body?.[field] === 'string') {
-      // "phone" isn't a real column (kept out of schema on purpose since the
-      // original mock didn't need it persisted); ignore anything not in schema.
-      if (field === 'phone') continue;
       data[field] = req.body[field];
     }
   }

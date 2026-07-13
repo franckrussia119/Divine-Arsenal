@@ -40,9 +40,20 @@ export default function VisitorHome({
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.3)_0,transparent_100%)]"></div>
         <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-gold/5 blur-3xl"></div>
         <div className="absolute -bottom-20 right-10 w-80 h-80 rounded-full bg-brand-gold/5 blur-3xl"></div>
+        {/* Logo watermark */}
+        <img
+          src="/logo.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 m-auto w-[600px] max-w-none opacity-[0.06] pointer-events-none select-none"
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/95 shadow-xl shadow-black/20 flex items-center justify-center p-2.5">
+              <img src="/logo.png" alt="Divine Arsenal" className="w-full h-full object-contain" />
+            </div>
+
             <div className="inline-flex items-center space-x-2 bg-brand-gold/15 border border-brand-gold/30 px-3.5 py-1.5 rounded-full mb-8">
               <Sparkles className="w-4 h-4 text-brand-gold animate-pulse" />
               <span className="text-xs uppercase tracking-widest text-brand-gold font-semibold font-mono">

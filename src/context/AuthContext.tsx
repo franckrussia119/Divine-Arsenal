@@ -6,22 +6,26 @@ interface AuthContextValue {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
+  pendingEmail: string | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, homeChurch?: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, whatsapp: string, homeChurch?: string) => Promise<void>;
+  verifyOtp: (email: string, code: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
   logout: () => void;
   updateUser: (fields: Partial<UserProfile>) => void;
   clearError: () => void;
+  clearPendingEmail: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-// The API returns raw DB fields; adapt them to the frontend's UserProfile shape.
 function toProfile(u: any): UserProfile {
   return {
     id: u.id,
     name: u.name,
     email: u.email,
     phone: u.phone ?? '',
+    whatsapp: u.whatsapp ?? '',
     role: u.role,
     bio: u.bio ?? '',
     homeChurch: u.homeChurch ?? '',
@@ -42,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -63,19 +68,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(res.token);
       setUser(toProfile(res.user));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not log in. Please try again.');
+      if (err instanceof ApiError && err.status === 403) {
+        // Account exists but isn't verified yet — route them to the OTP screen.
+        setPendingEmail(email);
+        setError('Please verify your email — enter the code we sent you.');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Could not log in. Please try again.');
+      }
       throw err;
     }
   }, []);
 
-  const signup = useCallback(async (name: string, email: string, password: string, homeChurch?: string) => {
+  const signup = useCallback(
+    async (name: string, email: string, password: string, whatsapp: string, homeChurch?: string) => {
+      setError(null);
+      try {
+        const res = await api.post<{ pendingEmail: string }>('/auth/signup', { name, email, password, whatsapp, homeChurch });
+        setPendingEmail(res.pendingEmail);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not create your account. Please try again.');
+        throw err;
+      }
+    },
+    []
+  );
+
+  const verifyOtp = useCallback(async (email: string, code: string) => {
     setError(null);
     try {
-      const res = await api.post<{ token: string; user: any }>('/auth/signup', { name, email, password, homeChurch });
+      const res = await api.post<{ token: string; user: any }>('/auth/verify-otp', { email, code });
       setToken(res.token);
       setUser(toProfile(res.user));
+      setPendingEmail(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create your account. Please try again.');
+      setError(err instanceof ApiError ? err.message : 'Could not verify that code.');
+      throw err;
+    }
+  }, []);
+
+  const resendOtp = useCallback(async (email: string) => {
+    setError(null);
+    try {
+      await api.post('/auth/resend-otp', { email });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not resend the code.');
       throw err;
     }
   }, []);
@@ -90,9 +126,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
+  const clearPendingEmail = useCallback(() => setPendingEmail(null), []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, signup, logout, updateUser, clearError }}>
+    <AuthContext.Provider
+      value={{ user, loading, error, pendingEmail, login, signup, verifyOtp, resendOtp, logout, updateUser, clearError, clearPendingEmail }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -12,6 +12,10 @@ import prayerRoutes from './routes/prayers.js';
 import journalRoutes from './routes/journal.js';
 import messageRoutes from './routes/messages.js';
 import communityRoutes from './routes/community.js';
+import groupRoutes from './routes/groups.js';
+import adminRoutes from './routes/admin.js';
+import uploadRoutes from './routes/uploads.js';
+import { UPLOADS_DIR } from './lib/uploads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -22,6 +26,9 @@ app.use(express.json({ limit: '2mb' }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// Uploaded avatars & lesson videos (served before the SPA catch-all below).
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/courses', courseRoutes);
@@ -30,6 +37,9 @@ app.use('/api/prayers', prayerRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // In production, the frontend is built into ../dist and served as static files,
 // with a catch-all so client-side routing/refreshes still work.

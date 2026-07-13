@@ -9,6 +9,7 @@ import PrayerAndCounsel from './components/PrayerAndCounsel';
 import ProfileView from './components/ProfileView';
 import CounselorAdminDashboard from './components/CounselorAdminDashboard';
 import DigitalCityHub from './components/DigitalCityHub';
+import GroupsView from './components/GroupsView';
 import AuthScreen from './components/Auth/AuthScreen';
 
 import { UserRole, Course, BlogPost, PrayerPoint, JournalEntry, Message, CommunityPost, LiveSession } from './types';
@@ -17,7 +18,7 @@ import { api } from './lib/api';
 
 // Tabs that require a signed-in account.
 const PROTECTED_TABS = new Set([
-  'dashboard', 'my-courses', 'war-room', 'profile', 'community-city',
+  'dashboard', 'my-courses', 'war-room', 'profile', 'community-city', 'groups',
   'counselor-dashboard', 'admin-dashboard',
 ]);
 
@@ -416,6 +417,8 @@ export default function App() {
                 onAddComment={handleAddCommunityComment}
               />
             )}
+
+            {currentTab === 'groups' && user && <GroupsView />}
 
             {((currentTab === 'counselor-dashboard' && currentRole === 'Counselor') ||
               (currentTab === 'admin-dashboard' && currentRole === 'Admin')) && (

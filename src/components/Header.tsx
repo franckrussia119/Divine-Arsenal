@@ -40,8 +40,8 @@ export default function Header({
             className="flex items-center space-x-3 cursor-pointer group"
             id="logo-brand-container"
           >
-            <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-brand-gold via-brand-gold-dark to-brand-blue-900 shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-all duration-300">
-              <Flame className="w-6 h-6 text-brand-blue-950 animate-pulse" />
+            <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-white shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-all duration-300 overflow-hidden p-1">
+              <img src="/logo.png" alt="Divine Arsenal" className="w-full h-full object-contain" />
               <div className="absolute inset-0 rounded-xl border border-brand-gold-light/40 scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <div>
@@ -92,12 +92,11 @@ export default function Header({
                   {t('teachings')}
                 </button>
                 <button
-                  onClick={() => onChangeTab('courses')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    currentTab === 'courses' 
-                      ? 'text-brand-gold bg-brand-blue-900/40 border-b border-brand-gold/40' 
-                      : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
-                  }`}
+                  onClick={() => {
+                    onChangeTab('visitor-home');
+                    setTimeout(() => document.getElementById('courses-section')?.scrollIntoView({ behavior: 'smooth' }), 0);
+                  }}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-300 hover:text-white hover:bg-brand-blue-900/20`}
                   id="tab-visitor-courses"
                 >
                   {t('myCourses')}
@@ -126,6 +125,17 @@ export default function Header({
                   id="tab-student-city"
                 >
                   {t('digitalCity')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('groups')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'groups' 
+                      ? 'text-brand-gold bg-brand-blue-900/40' 
+                      : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-student-groups"
+                >
+                  {t('groups')}
                 </button>
                 <button
                   onClick={() => onChangeTab('my-courses')}
@@ -192,6 +202,15 @@ export default function Header({
                 >
                   {t('digitalCity')}
                 </button>
+                <button
+                  onClick={() => onChangeTab('groups')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'groups' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-counselor-groups"
+                >
+                  {t('groups')}
+                </button>
               </div>
             ) : (
               <div className="flex items-center space-x-1">
@@ -212,6 +231,15 @@ export default function Header({
                   id="tab-admin-city"
                 >
                   {t('digitalCity')}
+                </button>
+                <button
+                  onClick={() => onChangeTab('groups')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                    currentTab === 'groups' ? 'text-brand-gold bg-brand-blue-900/40' : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/20'
+                  }`}
+                  id="tab-admin-groups"
+                >
+                  {t('groups')}
                 </button>
               </div>
             )}

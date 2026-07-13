@@ -56,34 +56,7 @@ export default function DigitalCityHub({
     likes: number;
     isLiked?: boolean;
     comments: any[];
-  }>>([
-    {
-      id: 'gpost-1',
-      authorName: 'Pastor Joel Adeleke',
-      authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150&h=150',
-      authorRole: 'Founder, AG Network',
-      category: 'Sermon',
-      content: 'The Power of the Spoken Word: In spiritual warfare, silence is a concession. Learn to declare the decrees of heaven over your life, your home, and your local assembly. We have dominion when we gather and raise our voices in corporate agreement.',
-      mediaUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800',
-      mediaType: 'photo',
-      dateStr: '3 hours ago',
-      likes: 42,
-      isLiked: false,
-      comments: []
-    },
-    {
-      id: 'gpost-2',
-      authorName: 'Sister Sarah Nkosi',
-      authorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150',
-      authorRole: 'Head of Counseling',
-      category: 'Devotional',
-      content: 'Walking in divine light starts with setting your heart right. If you are struggling with heavy limitations today, turn to Isaiah 58 and set a fast of devotion. Watch how quickly the yoke is broken when you seek His presence.',
-      dateStr: '5 hours ago',
-      likes: 28,
-      isLiked: false,
-      comments: []
-    }
-  ]);
+  }>>([]);
 
   const [gatherCommentsPostId, setGatherCommentsPostId] = useState<string | null>(null);
   const [newGatherCommentText, setNewGatherCommentText] = useState<{[key: string]: string}>({});
@@ -167,49 +140,10 @@ export default function DigitalCityHub({
   // Virtual Zoom Sanctuary settings
   const [micActive, setMicActive] = useState(false);
   const [videoActive, setVideoActive] = useState(false);
-  const [sanctuaryAgreementFlames, setSanctuaryAgreementFlames] = useState(1240);
-  const [sanctuaryChat, setSanctuaryChat] = useState<Array<{ name: string; text: string; role: string; time: string }>>([
-    { name: 'Brother Amos (Lagos)', text: 'The atmosphere is heavily charged! My hands are warm.', role: 'Student', time: '12:00 PM' },
-    { name: 'Sister Abigail (London)', text: 'I am breaking bloodline patterns over my kids right now!', role: 'Intercessor', time: '12:01 PM' },
-    { name: 'Pastor Joel Adeleke', text: 'Decree the blood of covenant! Speak to the gates!', role: 'Founder', time: '12:02 PM' }
-  ]);
+  const [sanctuaryAgreementFlames, setSanctuaryAgreementFlames] = useState(0);
+  const [sanctuaryChat, setSanctuaryChat] = useState<Array<{ name: string; text: string; role: string; time: string }>>([]);
   const [mySanctuaryMessage, setMySanctuaryMessage] = useState('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
-
-  // Simulated live scrolling comments addition
-  useEffect(() => {
-    if (!activeSession) return;
-    
-    const interval = setInterval(() => {
-      const simulatedNames = [
-        'Sister Deborah (Toronto)', 'Brother Kelechi (Dallas)', 'Evang. Sarah Nkosi',
-        'Sister Tabitha (Nairobi)', 'Brother Emmanuel (Cape Town)', 'Sister Chloe (Chicago)'
-      ];
-      const simulatedTexts = [
-        'Fire of God! I feel the chains snapping!',
-        'No weapon formed shall prosper!',
-        'This is the covenant shift we waited for!',
-        'Standing in corporate unity from my bedroom!',
-        'The legal claim of sickness is shattered.',
-        'Hallelujah! The sound of breakthrough!'
-      ];
-      const randomName = simulatedNames[Math.floor(Math.random() * simulatedNames.length)];
-      const randomText = simulatedTexts[Math.floor(Math.random() * simulatedTexts.length)];
-      
-      setSanctuaryChat(prev => [
-        ...prev,
-        {
-          name: randomName,
-          text: randomText,
-          role: Math.random() > 0.5 ? 'Watchman' : 'Student',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-      setSanctuaryAgreementFlames(prev => prev + Math.floor(Math.random() * 5) + 1);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [activeSession]);
 
   // Scroll live chat to bottom
   useEffect(() => {
@@ -270,14 +204,9 @@ export default function DigitalCityHub({
     ? posts 
     : posts.filter(p => p.category === feedFilter);
 
-  // Active user count simulation
-  const mockCitizensOnline = [
-    { name: 'Apostle Gabriel', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100', role: 'Apostolic Leader', loc: 'Lagos' },
-    { name: 'Sarah Nkosi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100', role: 'Staff Counselor', loc: 'Johannesburg' },
-    { name: 'Brother Amos', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100', role: 'Student Warrior', loc: 'Houston' },
-    { name: 'Sister Chioma', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100', role: 'Intercessory Altar', loc: 'London' },
-    { name: 'Marcus Sterling', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=100', role: 'Watchman Prophet', loc: 'New York' },
-  ];
+  // Note: real-time presence tracking isn't implemented yet, so this starts empty
+  // rather than showing fabricated "who's online" data.
+  const mockCitizensOnline: Array<{ name: string; avatar: string; role: string; loc: string }> = [];
 
   return (
     <div className="bg-slate-900 min-h-screen text-slate-100 pb-16" id="digital-city-city-view">

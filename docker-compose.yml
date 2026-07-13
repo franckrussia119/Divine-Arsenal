@@ -24,11 +24,19 @@ services:
         condition: service_healthy
     ports:
       - "4000:4000"
+    volumes:
+      - uploads-data:/app/uploads
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://divine:divine@db:5432/divine_arsenal?schema=public}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       PORT: 4000
       NODE_ENV: production
+      UPLOADS_DIR: /app/uploads
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
 
 volumes:
   postgres-data:
+  uploads-data:

@@ -5,6 +5,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
+  whatsapp: string;
   role: UserRole;
   bio: string;
   homeChurch: string;
@@ -18,6 +19,17 @@ export interface UserProfile {
   plan: string;
   planPrice: string;
   renewsDate: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  memberCount: number;
+  createdByName: string;
+  isMember: boolean;
+  isAdmin: boolean;
 }
 
 export interface Lesson {
