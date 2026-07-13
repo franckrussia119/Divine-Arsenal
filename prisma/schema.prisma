@@ -185,7 +185,8 @@ model CommunityPost {
   content   String
   imageUrl  String?
   videoUrl  String?
-  category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching
+  category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching | Sermon | Devotional | ...
+  feedType  String   @default("city") // "city" (main feed) | "gather"
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   groupId   String?

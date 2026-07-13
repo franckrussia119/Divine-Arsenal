@@ -20,7 +20,7 @@ Telegram notification whenever someone signs up).
 - Your logo is now in the header and as a watermark on the homepage hero.
 
 ### Known limitations (still local-only, not persisted)
-- The "Gather" sub-feed and the live-video "Sanctuary" chat inside Community City are still local-only — no fake data anymore, but nothing typed there saves to the database yet.
+- The live-video "Sanctuary" chat inside a live session is still local-only — the Gather sub-feed is now fully real (photos/videos upload for real, 50MB max, and posts persist).
 - No real-time "who's online" presence tracking (would need WebSockets).
 - No password-reset email flow yet.
 

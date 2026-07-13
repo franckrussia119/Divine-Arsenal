@@ -7,7 +7,7 @@ import {
   Tv, Eye, Play, Sparkle, AlertCircle
 } from 'lucide-react';
 import { useTranslation } from '../translations';
-import { getToken } from '../lib/api';
+import { api, getToken } from '../lib/api';
 
 interface DigitalCityHubProps {
   profile: UserProfile;
@@ -39,14 +39,16 @@ export default function DigitalCityHub({
   const [activeSubTab, setActiveSubTab] = useState<'feed' | 'gather' | 'live-lobby'>('gather'); // Let's make Gather the default now so the user sees it immediately!
   const [feedFilter, setFeedFilter] = useState<'all' | 'testimony' | 'prophetic' | 'prayer-alarm' | 'teaching'>('all');
 
-  // Gather sub-tab states
+  // Gather sub-tab states — now backed by the real community_post API (feedType: 'gather')
   const [gatherFilter, setGatherFilter] = useState<'All' | 'Sermon' | 'Testimony' | 'Devotional' | 'Prayer request' | 'Announcement'>('All');
   const [gatherPostCategory, setGatherPostCategory] = useState<'Sermon' | 'Testimony' | 'Devotional' | 'Prayer request' | 'Announcement'>('Devotional');
   const [gatherPostContent, setGatherPostContent] = useState('');
-  const [gatherPostYoutube, setGatherPostYoutube] = useState('');
-  const [gatherPostPhoto, setGatherPostPhoto] = useState('');
+  const [gatherPostYoutube, setGatherPostYoutube] = useState(''); // holds an uploaded video URL now, not a pasted link
+  const [gatherPostPhoto, setGatherPostPhoto] = useState(''); // holds an uploaded photo URL
   const [showGatherPhotoInput, setShowGatherPhotoInput] = useState(false);
-  const [gatherPosts, setGatherPosts] = useState<Array<{
+  const [gatherMediaUploading, setGatherMediaUploading] = useState<'image' | 'video' | null>(null);
+
+  type GatherPost = {
     id: string;
     authorName: string;
     authorAvatar: string;
@@ -59,74 +61,116 @@ export default function DigitalCityHub({
     likes: number;
     isLiked?: boolean;
     comments: any[];
-  }>>([]);
+  };
+
+  const toGatherPost = (p: CommunityPost): GatherPost => ({
+    id: p.id,
+    authorName: p.authorName,
+    authorAvatar: p.authorAvatar,
+    authorRole: p.authorRole,
+    category: (p.category as GatherPost['category']) || 'Devotional',
+    content: p.content,
+    mediaUrl: p.imageUrl || p.videoUrl || undefined,
+    mediaType: p.imageUrl ? 'photo' : p.videoUrl ? 'video' : undefined,
+    dateStr: p.dateStr,
+    likes: p.likes,
+    isLiked: p.isLiked,
+    comments: p.comments.map((c) => ({
+      id: c.id,
+      authorName: c.authorName,
+      authorAvatar: c.authorAvatar,
+      authorRole: c.authorRole,
+      content: c.content,
+      dateStr: c.dateStr,
+    })),
+  });
+
+  const [gatherPosts, setGatherPosts] = useState<GatherPost[]>([]);
+  const [gatherLoading, setGatherLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<{ posts: CommunityPost[] }>('/community/posts?feedType=gather')
+      .then((res) => setGatherPosts(res.posts.map(toGatherPost)))
+      .catch(console.error)
+      .finally(() => setGatherLoading(false));
+  }, []);
 
   const [gatherCommentsPostId, setGatherCommentsPostId] = useState<string | null>(null);
   const [newGatherCommentText, setNewGatherCommentText] = useState<{[key: string]: string}>({});
 
-  const handleLikeGatherPost = (id: string) => {
-    setGatherPosts(prev => prev.map(p => {
-      if (p.id !== id) return p;
-      const isLikedNow = !p.isLiked;
-      return {
-        ...p,
-        isLiked: isLikedNow,
-        likes: p.likes + (isLikedNow ? 1 : -1)
-      };
-    }));
+  const handleGatherMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('That file is larger than 50MB. Please choose a smaller one.');
+      e.target.value = '';
+      return;
+    }
+    setGatherMediaUploading(kind === 'photo' ? 'image' : 'video');
+    try {
+      const formData = new FormData();
+      formData.append('media', file);
+      const res = await fetch('/api/uploads/media', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      if (kind === 'photo') { setGatherPostPhoto(data.url); setGatherPostYoutube(''); }
+      else { setGatherPostYoutube(data.url); setGatherPostPhoto(''); }
+    } catch (err) {
+      console.error('Gather media upload failed:', err);
+      alert('Could not upload that file. Please try again.');
+    } finally {
+      setGatherMediaUploading(null);
+      e.target.value = '';
+    }
   };
 
-  const handleAddGatherComment = (postId: string) => {
+  const handleLikeGatherPost = async (id: string) => {
+    try {
+      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${id}/like`);
+      setGatherPosts((prev) => prev.map((p) => (p.id === id ? toGatherPost(res.post) : p)));
+    } catch (err) {
+      console.error('Like failed:', err);
+    }
+  };
+
+  const handleAddGatherComment = async (postId: string) => {
     const text = newGatherCommentText[postId] || '';
     if (!text.trim()) return;
 
-    const newComment = {
-      id: `gcom-${Date.now()}`,
-      authorName: profile.name,
-      authorAvatar: profile.avatar,
-      authorRole: profile.role,
-      content: text,
-      dateStr: 'Just now'
-    };
-
-    setGatherPosts(prev => prev.map(p => {
-      if (p.id !== postId) return p;
-      return {
-        ...p,
-        comments: [...p.comments, newComment]
-      };
-    }));
-
-    setNewGatherCommentText(prev => ({ ...prev, [postId]: '' }));
+    try {
+      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${postId}/comments`, { content: text });
+      setGatherPosts((prev) => prev.map((p) => (p.id === postId ? toGatherPost(res.post) : p)));
+      setNewGatherCommentText((prev) => ({ ...prev, [postId]: '' }));
+    } catch (err) {
+      console.error('Comment failed:', err);
+    }
   };
 
-  const handlePublishGatherPost = (e: React.FormEvent) => {
+  const handlePublishGatherPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gatherPostContent.trim()) return;
 
-    const hasYoutube = gatherPostYoutube.trim().length > 0;
-    const hasPhoto = gatherPostPhoto.trim().length > 0;
-
-    const newPost = {
-      id: `gpost-${Date.now()}`,
-      authorName: profile.name,
-      authorAvatar: profile.avatar,
-      authorRole: `${profile.role} (Covenant Citizen)`,
-      category: gatherPostCategory,
-      content: gatherPostContent,
-      mediaUrl: hasPhoto ? gatherPostPhoto : (hasYoutube ? gatherPostYoutube : undefined),
-      mediaType: hasPhoto ? ('photo' as const) : (hasYoutube ? ('video' as const) : undefined),
-      dateStr: 'Just now',
-      likes: 0,
-      isLiked: false,
-      comments: []
-    };
-
-    setGatherPosts([newPost, ...gatherPosts]);
-    setGatherPostContent('');
-    setGatherPostYoutube('');
-    setGatherPostPhoto('');
-    setShowGatherPhotoInput(false);
+    try {
+      const res = await api.post<{ post: CommunityPost }>('/community/posts', {
+        content: gatherPostContent,
+        category: gatherPostCategory,
+        imageUrl: gatherPostPhoto || undefined,
+        videoUrl: gatherPostYoutube || undefined,
+        feedType: 'gather',
+      });
+      setGatherPosts((prev) => [toGatherPost(res.post), ...prev]);
+      setGatherPostContent('');
+      setGatherPostYoutube('');
+      setGatherPostPhoto('');
+      setShowGatherPhotoInput(false);
+    } catch (err) {
+      console.error('Publish gather post failed:', err);
+    }
   };
 
   // Create Post Form State
@@ -747,24 +791,42 @@ export default function DigitalCityHub({
                         required
                       />
 
-                      {/* Optional Youtube/Vimeo link */}
+                      {/* Real video upload (max 50MB) */}
+                      <label
+                        htmlFor="gather-video-upload"
+                        className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>
+                          {gatherMediaUploading === 'video' ? 'Uploading…' : gatherPostYoutube ? 'Video attached ✓' : 'Add a video (max 50MB)'}
+                        </span>
+                      </label>
                       <input
-                        type="text"
-                        value={gatherPostYoutube}
-                        onChange={(e) => setGatherPostYoutube(e.target.value)}
-                        placeholder="Paste a YouTube or Vimeo link (optional)"
-                        className="w-full bg-slate-900 border border-slate-800 text-sm text-slate-300 p-3 rounded-xl outline-none focus:border-brand-gold"
+                        id="gather-video-upload"
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        disabled={!!gatherMediaUploading}
+                        onChange={(e) => handleGatherMediaUpload(e, 'video')}
                       />
 
-                      {/* Optional Photo Link Input */}
+                      {/* Optional Photo Upload */}
                       {showGatherPhotoInput && (
                         <div className="animate-fadeIn">
+                          <label
+                            htmlFor="gather-photo-upload"
+                            className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span>{gatherMediaUploading === 'image' ? 'Uploading…' : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo'}</span>
+                          </label>
                           <input
-                            type="text"
-                            value={gatherPostPhoto}
-                            onChange={(e) => setGatherPostPhoto(e.target.value)}
-                            placeholder="Paste an Unsplash image link or photo URL (optional)"
-                            className="w-full bg-slate-900 border border-slate-800 text-sm text-slate-300 p-3 rounded-xl outline-none focus:border-brand-gold"
+                            id="gather-photo-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={!!gatherMediaUploading}
+                            onChange={(e) => handleGatherMediaUpload(e, 'photo')}
                           />
                         </div>
                       )}
@@ -813,7 +875,9 @@ export default function DigitalCityHub({
 
                   {/* Shared Feed / List */}
                   <div className="space-y-6">
-                    {gatherPosts.filter(p => gatherFilter === 'All' || p.category === gatherFilter).length === 0 ? (
+                    {gatherLoading ? (
+                      <div className="text-center py-16 text-slate-500 text-sm">Loading…</div>
+                    ) : gatherPosts.filter(p => gatherFilter === 'All' || p.category === gatherFilter).length === 0 ? (
                       <div className="text-center py-16 bg-slate-950/40 border border-slate-800/60 rounded-2xl">
                         <p className="text-slate-500 text-sm">Nothing shared here yet. Be the first.</p>
                       </div>

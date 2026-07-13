@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe } from 'lucide-react';
+import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe, Menu, X } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useTranslation } from '../translations';
 
@@ -22,6 +22,36 @@ export default function Header({
 }: HeaderProps) {
   const { lang, setLang, t } = useTranslation();
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const mobileNavItems: { label: string; tab: string }[] =
+    currentRole === 'Visitor'
+      ? [
+          { label: t('home'), tab: 'visitor-home' },
+          { label: t('digitalCity'), tab: 'community-city' },
+          { label: t('teachings'), tab: 'blog' },
+        ]
+      : currentRole === 'Student'
+      ? [
+          { label: t('dashboard'), tab: 'dashboard' },
+          { label: t('digitalCity'), tab: 'community-city' },
+          { label: t('groups'), tab: 'groups' },
+          { label: t('myCourses'), tab: 'my-courses' },
+          { label: t('warRoom'), tab: 'war-room' },
+          { label: t('teachings'), tab: 'blog' },
+          { label: t('profile'), tab: 'profile' },
+        ]
+      : currentRole === 'Counselor'
+      ? [
+          { label: t('carePortal'), tab: 'counselor-dashboard' },
+          { label: t('digitalCity'), tab: 'community-city' },
+          { label: t('groups'), tab: 'groups' },
+        ]
+      : [
+          { label: t('adminConsole'), tab: 'admin-dashboard' },
+          { label: t('digitalCity'), tab: 'community-city' },
+          { label: t('groups'), tab: 'groups' },
+        ];
 
   const notifications = [
     { id: 1, text: 'Sister Sarah replied to your counseling query.', time: '2h ago' },
@@ -247,6 +277,16 @@ export default function Header({
 
           {/* Actions & Role Switcher */}
           <div className="flex items-center space-x-4">
+
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setShowMobileMenu((s) => !s)}
+              className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-brand-blue-900/40 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+              id="mobile-menu-toggle"
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
             
             {/* Language Switcher */}
             <div className="flex items-center bg-brand-blue-900/60 rounded-full border border-brand-gold/30 p-0.5" id="language-switcher">
@@ -349,6 +389,47 @@ export default function Header({
 
         </div>
       </div>
+      {/* Mobile nav drawer */}
+      {showMobileMenu && (
+        <div className="md:hidden border-t border-brand-gold/20 bg-brand-blue-950 px-4 pb-4 pt-2 space-y-1" id="mobile-nav-drawer">
+          {mobileNavItems.map((item) => (
+            <button
+              key={item.tab}
+              onClick={() => {
+                onChangeTab(item.tab);
+                setShowMobileMenu(false);
+              }}
+              className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                currentTab === item.tab
+                  ? 'text-brand-gold bg-brand-blue-900/50'
+                  : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/30'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+
+          <div className="pt-2 mt-2 border-t border-brand-gold/10">
+            {!profile ? (
+              <button
+                onClick={() => { onSignIn(); setShowMobileMenu(false); }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-brand-gold text-brand-blue-950 font-semibold text-xs uppercase tracking-wider"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>{t('signIn') ?? 'Sign In'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => { onLogout(); setShowMobileMenu(false); }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-brand-blue-900/40 text-gray-300 font-semibold text-xs uppercase tracking-wider"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

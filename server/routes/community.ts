@@ -24,6 +24,7 @@ function shape(post: any, currentUserId?: string) {
     prayerAgreements: post.agreements.length,
     dateStr: post.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     category: post.category,
+    feedType: post.feedType,
     groupId: post.groupId ?? undefined,
     isLiked: currentUserId ? post.likes.some((l: any) => l.userId === currentUserId) : false,
     isAgreed: currentUserId ? post.agreements.some((a: any) => a.userId === currentUserId) : false,
@@ -40,8 +41,9 @@ function shape(post: any, currentUserId?: string) {
 
 router.get('/posts', requireAuth, async (req: AuthedRequest, res) => {
   const groupId = typeof req.query.groupId === 'string' ? req.query.groupId : undefined;
+  const feedType = typeof req.query.feedType === 'string' ? req.query.feedType : 'city';
   const posts = await prisma.communityPost.findMany({
-    where: groupId ? { groupId } : { groupId: null },
+    where: groupId ? { groupId } : { groupId: null, feedType },
     include: postInclude,
     orderBy: { createdAt: 'desc' },
   });
@@ -49,7 +51,7 @@ router.get('/posts', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
-  const { content, imageUrl, videoUrl, category, groupId } = req.body ?? {};
+  const { content, imageUrl, videoUrl, category, groupId, feedType } = req.body ?? {};
   if (!content) return res.status(400).json({ error: 'Post content is required' });
 
   if (groupId) {
@@ -65,6 +67,7 @@ router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
       imageUrl: imageUrl ?? null,
       videoUrl: videoUrl ?? null,
       category: category ?? 'teaching',
+      feedType: feedType === 'gather' ? 'gather' : 'city',
       authorId: req.userId!,
       groupId: groupId ?? null,
     },
