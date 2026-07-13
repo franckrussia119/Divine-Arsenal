@@ -90,6 +90,16 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Visitors get ~4 minutes of free browsing (blog, courses, etc.) before
+  // being prompted to create an account — same pattern as Instagram/Facebook.
+  useEffect(() => {
+    if (user) return; // signed-in users are never gated
+    const timer = setTimeout(() => {
+      setShowAuth(true);
+    }, 4 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [user]);
+
   const derivedProfile = useMemo(() => {
     if (!user) return null;
     const lessonsCount = enrolledCourses.reduce(
@@ -277,6 +287,15 @@ export default function App() {
     }
   };
 
+  const handleDeleteCommunityPost = async (id: string) => {
+    try {
+      await api.delete(`/community/posts/${id}`);
+      setCommunityPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error('Delete post failed:', err);
+    }
+  };
+
   const handleUpdateProfile = (updatedFields: Partial<NonNullable<typeof derivedProfile>>) => {
     // Optimistic local update, persisted to the DB in the background.
     updateUser(updatedFields);
@@ -420,13 +439,19 @@ export default function App() {
                 onLikePost={handleLikeCommunityPost}
                 onAgreePost={handleAgreeCommunityPost}
                 onAddComment={handleAddCommunityComment}
+                onDeletePost={handleDeleteCommunityPost}
                 onOpenGroups={() => { setSelectedGroupId(null); setCurrentTab('groups'); }}
               />
             )}
 
             {currentTab === 'groups' && user && (
               selectedGroupId ? (
-                <GroupDetailView groupId={selectedGroupId} onBack={() => setSelectedGroupId(null)} />
+                <GroupDetailView
+                  groupId={selectedGroupId}
+                  currentUserId={user?.id ?? ''}
+                  isAdminRole={currentRole === 'Admin'}
+                  onBack={() => setSelectedGroupId(null)}
+                />
               ) : (
                 <GroupsView onSelectGroup={setSelectedGroupId} />
               )

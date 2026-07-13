@@ -155,6 +155,118 @@ export default function VisitorHome({
         </div>
       </section>
 
+      {/* Direct feed of teachings, moved up so visitors see real content immediately */}
+      <section className="py-20 bg-white" id="teachings-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="text-xs font-bold text-brand-gold uppercase tracking-widest font-mono">
+              The Written word
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl text-brand-blue-950 font-bold mt-2 mb-4">
+              The Living Teachings & Blog
+            </h2>
+            <p className="text-slate-600">
+              No login or account needed. Our blog serves as anointed fuel for your growth, loaded with biblical models, declarations, and templates.
+            </p>
+          </div>
+
+          {featuredPost ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Featured Post Card (Span 2) */}
+            <div 
+              onClick={() => onSelectBlogPost(featuredPost)}
+              className="lg:col-span-2 bg-brand-blue-950 text-white rounded-3xl overflow-hidden border border-brand-gold/20 flex flex-col md:flex-row hover:shadow-2xl transition-all duration-300 cursor-pointer group"
+            >
+              <div className="md:w-1/2 relative min-h-64 md:min-h-full">
+                <img
+                  src={featuredPost.imageUrl}
+                  alt={featuredPost.title}
+                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-102 transition-transform duration-300"
+                />
+                <span className="absolute top-6 left-6 bg-brand-gold text-brand-blue-950 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-widest uppercase">
+                  Featured Teaching
+                </span>
+              </div>
+              <div className="md:w-1/2 p-8 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-mono text-brand-gold uppercase tracking-widest font-semibold block mb-2">
+                    Category: {featuredPost.category}
+                  </span>
+                  <h3 className="font-serif text-2xl font-bold leading-tight mb-4 group-hover:text-brand-gold transition-colors">
+                    {featuredPost.title}
+                  </h3>
+                  <p className="text-sm text-slate-300 line-clamp-4 leading-relaxed mb-6">
+                    {featuredPost.excerpt}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-4 border-t border-white/10">
+                  <div>
+                    <span className="block text-white font-serif text-sm">{featuredPost.author}</span>
+                    <span className="text-[10px] text-brand-gold font-sans">{featuredPost.authorRole}</span>
+                  </div>
+                  <span>{featuredPost.readTime}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Regular Post Teasers (Stack 2) */}
+            <div className="space-y-6 flex flex-col justify-between">
+              {regularPosts.map((post) => (
+                <div 
+                  key={post.id}
+                  onClick={() => onSelectBlogPost(post)}
+                  className="bg-slate-50 hover:bg-slate-100 p-6 rounded-2xl border border-slate-200 cursor-pointer transition-all duration-200 group flex-1 flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="text-[10px] font-mono text-brand-gold-dark font-bold uppercase tracking-widest block mb-2">
+                      {post.category} — {post.date}
+                    </span>
+                    <h4 className="font-serif text-lg font-bold text-brand-blue-950 leading-snug group-hover:text-brand-gold-dark transition-colors mb-2 line-clamp-2">
+                      {post.title}
+                    </h4>
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-3 border-t border-slate-200/60 font-mono">
+                    <span className="font-serif font-semibold text-slate-800">{post.author}</span>
+                    <span>{post.readTime}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+          ) : (
+            <div className="text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200">
+              <p className="text-sm text-slate-500">No teachings have been published yet — check back soon.</p>
+            </div>
+          )}
+
+          {/* CTA prompting user to login/sign up */}
+          <div className="mt-12 bg-gradient-to-r from-brand-blue-950 to-brand-blue-900 rounded-2xl p-6 sm:p-8 border border-brand-gold/20 flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-6 md:mb-0 text-center md:text-left">
+              <h3 className="font-serif text-xl sm:text-2xl text-brand-gold font-bold">
+                Ready to turn these teachings into habit?
+              </h3>
+              <p className="text-sm text-slate-300 mt-1">
+                Create a student profile to save study progress, track scripture logs, and receive personal counsel.
+              </p>
+            </div>
+            <button
+              onClick={onSignIn}
+              className="px-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-blue-950 font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-brand-gold/10 transition-all duration-200 whitespace-nowrap cursor-pointer"
+            >
+              CREATE A STUDENT PROFILE
+            </button>
+          </div>
+
+        </div>
+      </section>
+
       {/* 3. Core Modules Value Pitch (The 3 Pillars) */}
       <section className="py-20 bg-white" id="three-pillars-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -312,116 +424,6 @@ export default function VisitorHome({
       </section>
 
       {/* 5. Living Teachings (Blog Section) */}
-      <section className="py-20 bg-white" id="teachings-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-bold text-brand-gold uppercase tracking-widest font-mono">
-              The Written word
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-brand-blue-950 font-bold mt-2 mb-4">
-              The Living Teachings & Blog
-            </h2>
-            <p className="text-slate-600">
-              No login or account needed. Our blog serves as anointed fuel for your growth, loaded with biblical models, declarations, and templates.
-            </p>
-          </div>
-
-          {featuredPost ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Featured Post Card (Span 2) */}
-            <div 
-              onClick={() => onSelectBlogPost(featuredPost)}
-              className="lg:col-span-2 bg-brand-blue-950 text-white rounded-3xl overflow-hidden border border-brand-gold/20 flex flex-col md:flex-row hover:shadow-2xl transition-all duration-300 cursor-pointer group"
-            >
-              <div className="md:w-1/2 relative min-h-64 md:min-h-full">
-                <img
-                  src={featuredPost.imageUrl}
-                  alt={featuredPost.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-102 transition-transform duration-300"
-                />
-                <span className="absolute top-6 left-6 bg-brand-gold text-brand-blue-950 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-widest uppercase">
-                  Featured Teaching
-                </span>
-              </div>
-              <div className="md:w-1/2 p-8 flex flex-col justify-between">
-                <div>
-                  <span className="text-xs font-mono text-brand-gold uppercase tracking-widest font-semibold block mb-2">
-                    Category: {featuredPost.category}
-                  </span>
-                  <h3 className="font-serif text-2xl font-bold leading-tight mb-4 group-hover:text-brand-gold transition-colors">
-                    {featuredPost.title}
-                  </h3>
-                  <p className="text-sm text-slate-300 line-clamp-4 leading-relaxed mb-6">
-                    {featuredPost.excerpt}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-4 border-t border-white/10">
-                  <div>
-                    <span className="block text-white font-serif text-sm">{featuredPost.author}</span>
-                    <span className="text-[10px] text-brand-gold font-sans">{featuredPost.authorRole}</span>
-                  </div>
-                  <span>{featuredPost.readTime}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Regular Post Teasers (Stack 2) */}
-            <div className="space-y-6 flex flex-col justify-between">
-              {regularPosts.map((post) => (
-                <div 
-                  key={post.id}
-                  onClick={() => onSelectBlogPost(post)}
-                  className="bg-slate-50 hover:bg-slate-100 p-6 rounded-2xl border border-slate-200 cursor-pointer transition-all duration-200 group flex-1 flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono text-brand-gold-dark font-bold uppercase tracking-widest block mb-2">
-                      {post.category} — {post.date}
-                    </span>
-                    <h4 className="font-serif text-lg font-bold text-brand-blue-950 leading-snug group-hover:text-brand-gold-dark transition-colors mb-2 line-clamp-2">
-                      {post.title}
-                    </h4>
-                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-3 border-t border-slate-200/60 font-mono">
-                    <span className="font-serif font-semibold text-slate-800">{post.author}</span>
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-          </div>
-          ) : (
-            <div className="text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200">
-              <p className="text-sm text-slate-500">No teachings have been published yet — check back soon.</p>
-            </div>
-          )}
-
-          {/* CTA prompting user to login/sign up */}
-          <div className="mt-12 bg-gradient-to-r from-brand-blue-950 to-brand-blue-900 rounded-2xl p-6 sm:p-8 border border-brand-gold/20 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0 text-center md:text-left">
-              <h3 className="font-serif text-xl sm:text-2xl text-brand-gold font-bold">
-                Ready to turn these teachings into habit?
-              </h3>
-              <p className="text-sm text-slate-300 mt-1">
-                Create a student profile to save study progress, track scripture logs, and receive personal counsel.
-              </p>
-            </div>
-            <button
-              onClick={onSignIn}
-              className="px-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-blue-950 font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-brand-gold/10 transition-all duration-200 whitespace-nowrap cursor-pointer"
-            >
-              CREATE A STUDENT PROFILE
-            </button>
-          </div>
-
-        </div>
-      </section>
 
       {/* 6. Dynamic Prayer Wall Peek */}
       <section className="py-20 bg-slate-50 border-t border-slate-200">

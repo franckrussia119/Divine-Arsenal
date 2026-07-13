@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
+import { notifyRole } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -201,6 +202,7 @@ router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: Aut
     });
 
     res.status(201).json({ course: shapeCatalogCourse(course) });
+    notifyRole('Student', `A new course was just published: "${title}"`);
   } catch (err) {
     console.error('Create course error:', err);
     res.status(500).json({ error: 'Could not create course' });

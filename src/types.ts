@@ -128,6 +128,7 @@ export interface CommunityComment {
 
 export interface CommunityPost {
   id: string;
+  authorId?: string;
   authorName: string;
   authorAvatar: string;
   authorRole: string;

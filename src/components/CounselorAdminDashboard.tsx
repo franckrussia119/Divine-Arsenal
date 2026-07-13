@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Course, BlogPost, PrayerPoint } from '../types';
 import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3, Video } from 'lucide-react';
-import { api, getToken } from '../lib/api';
+import { api } from '../lib/api';
+import { uploadFile } from '../lib/uploadWithProgress';
 
 interface AdminStats {
   totalUsers: number;
@@ -59,6 +60,7 @@ export default function CounselorAdminDashboard({
   const [courseImg, setCourseImg] = useState('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800');
   const [courseVideoUrl, setCourseVideoUrl] = useState('');
   const [courseVideoUploading, setCourseVideoUploading] = useState(false);
+  const [courseVideoProgress, setCourseVideoProgress] = useState(0);
 
   // Admin-only: staff account creation
   const [staffName, setStaffName] = useState('');
@@ -81,22 +83,18 @@ export default function CounselorAdminDashboard({
     const file = e.target.files?.[0];
     if (!file) return;
     setCourseVideoUploading(true);
+    setCourseVideoProgress(0);
     try {
-      const formData = new FormData();
-      formData.append('video', file);
-      const res = await fetch('/api/uploads/video', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
+      const data = await uploadFile<{ url: string }>('/api/uploads/video', 'video', file, {
+        onProgress: setCourseVideoProgress,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Upload failed');
       setCourseVideoUrl(data.url);
     } catch (err) {
       console.error('Video upload failed:', err);
       alert('Could not upload that video. Please try a smaller file.');
     } finally {
       setCourseVideoUploading(false);
+      setCourseVideoProgress(0);
     }
   };
 
@@ -435,7 +433,7 @@ export default function CounselorAdminDashboard({
                   >
                     <Upload className="w-4 h-4" />
                     <span>
-                      {courseVideoUploading ? 'Uploading…' : courseVideoUrl ? 'Video uploaded — click to replace' : 'Click to upload a video file'}
+                      {courseVideoUploading ? `Uploading… ${courseVideoProgress}%` : courseVideoUrl ? 'Video uploaded — click to replace' : 'Click to upload a video file'}
                     </span>
                   </label>
                   <input

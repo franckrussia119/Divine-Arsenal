@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, AuthedRequest } from '../middleware/auth.js';
+import { notifyUser } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -116,6 +117,8 @@ router.post('/:id/members', requireAuth, async (req: AuthedRequest, res) => {
     include: { members: { include: { user: true } }, createdBy: true },
   });
   if (!group) return res.status(404).json({ error: 'Group not found' });
+
+  notifyUser(user.id, `You were added to the group "${group.name}".`);
 
   res.status(201).json({
     group: shape(group, req.userId),

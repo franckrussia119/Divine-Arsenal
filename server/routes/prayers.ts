@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, AuthedRequest } from '../middleware/auth.js';
+import { notifyUser } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -96,6 +97,12 @@ router.post('/:id/pray', requireAuth, async (req: AuthedRequest, res) => {
     where: { id: prayer.id },
     include: { agreements: true },
   });
+
+  if (prayer.userId !== req.userId) {
+    const prayingUser = await prisma.user.findUnique({ where: { id: req.userId } });
+    notifyUser(prayer.userId, `${prayingUser?.name ?? 'Someone'} is praying with you over "${prayer.title}".`);
+  }
+
   res.json({ prayer: shape(updated) });
 });
 
@@ -113,6 +120,8 @@ router.post('/:id/reply', requireAuth, async (req: AuthedRequest, res) => {
   const message = await prisma.message.create({
     data: { text, senderId: req.userId!, receiverId: prayer.userId },
   });
+
+  notifyUser(prayer.userId, `A counselor replied to your prayer request "${prayer.title}".`);
 
   res.status(201).json({ messageId: message.id });
 });

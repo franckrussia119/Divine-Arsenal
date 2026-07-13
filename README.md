@@ -12,17 +12,24 @@ Telegram notification whenever someone signs up).
 - **Real accounts with email verification** — sign up sends a 6-digit code by email (via Resend); the account only activates once verified.
 - **WhatsApp number collected at signup**, and a **Telegram bot** pings you the moment a new (verified) user joins.
 - **Role-gated signup** — self-signup is always a Student account. Only an existing Admin can create Counselor or Admin accounts (Admin dashboard → "Create Counselor / Admin Account").
-- **Profile picture upload** — click your avatar on the Profile page.
+- **Profile picture upload**, with a **real upload progress percentage** shown live (this applies to every upload in the app: avatar, course videos, and Zion Digital City photos/videos).
 - **All courses are free**, and Admins can create/edit them, including uploading an actual video file for the first lesson (more modules/lessons can be added afterward via the API).
-- **Groups** — anyone can create a group and others can join/leave it.
+- **Real photo/video uploads** in Zion Digital City (both the main feed and the Gather sub-feed) — 50MB max, actual files, not pasted links.
+- **Delete your own posts** (Admins can delete any post) in the main feed, Gather, and inside groups.
+- **Real in-app notifications** — the bell icon shows real, live activity (comments, likes, prayer agreements, counselor replies, new courses/teachings, live sessions, being added to a group), polling every 30 seconds.
+- **Groups** — anyone can create a group; others browse and join it Reddit-style. Group admins can add members directly by email, remove members, and each group has its own post feed.
 - **Admin analytics** — total users, students, counselors, enrollments, per-course enrollment/progress, and a full list of students with what they're enrolled in.
+- **Installable as a mobile app (PWA)** — a manifest, app icons generated from your logo, and a service worker mean visitors get "Add to Home Screen" / "Install App" on Android and iOS.
+- **Working mobile navigation** — the nav previously had no mobile fallback at all; there's now a proper hamburger menu.
+- **Facebook/Instagram-style visitor experience** — the homepage leads with real published teachings right after the hero (not buried under marketing sections), and an unauthenticated visitor gets prompted to sign up after ~4 minutes of browsing.
 - **English / French** — a language switcher in the header; the mechanism (`src/translations.tsx`) covers navigation, auth, groups, and admin screens. Some older screens still have English-only strings — extending coverage there is a good next task, the pattern is already in place.
-- Your logo is now in the header and as a watermark on the homepage hero.
+- Your logo is in the header, and the homepage hero now has a 3-photo auto-sliding background with the logo as the emblem on top.
 
 ### Known limitations (still local-only, not persisted)
-- The live-video "Sanctuary" chat inside a live session is still local-only — the Gather sub-feed is now fully real (photos/videos upload for real, 50MB max, and posts persist).
+- The live-video "Sanctuary" chat inside an actual live session is still local-only.
 - No real-time "who's online" presence tracking (would need WebSockets).
 - No password-reset email flow yet.
+- Notifications are in-app only (polling) — no push notifications to the phone's lock screen yet; that would need a separate VAPID/push-subscription setup.
 
 ---
 

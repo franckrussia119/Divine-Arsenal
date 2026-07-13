@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe, Menu, X } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useTranslation } from '../translations';
+import { api } from '../lib/api';
 
 interface HeaderProps {
   currentRole: UserRole;
@@ -53,11 +54,42 @@ export default function Header({
           { label: t('groups'), tab: 'groups' },
         ];
 
-  const notifications = [
-    { id: 1, text: 'Sister Sarah replied to your counseling query.', time: '2h ago' },
-    { id: 2, text: 'New lesson unlocked: "Activating the Armor of God".', time: '1d ago' },
-    { id: 3, text: 'Congratulations on keeping a 12-day devotion streak!', time: '1d ago' }
-  ];
+  const [notifications, setNotifications] = useState<{ id: string; message: string; timeAgo: string; read: boolean }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = () => {
+    if (!profile) return;
+    api
+      .get<{ notifications: any[]; unreadCount: number }>('/notifications')
+      .then((res) => {
+        setNotifications(res.notifications);
+        setUnreadCount(res.unreadCount);
+      })
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    if (!profile) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000); // poll every 30s
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
+
+  const handleOpenNotifications = () => {
+    const opening = !showNotificationMenu;
+    setShowNotificationMenu(opening);
+    if (opening && unreadCount > 0) {
+      api.post('/notifications/read-all').then(() => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }).catch(console.error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-brand-blue-950 border-b border-brand-gold/20 text-white shadow-xl">
@@ -318,27 +350,34 @@ export default function Header({
             {profile && (
               <div className="relative">
                 <button 
-                  onClick={() => setShowNotificationMenu(!showNotificationMenu)}
+                  onClick={handleOpenNotifications}
                   className="p-2 text-gray-300 hover:text-brand-gold hover:bg-brand-blue-900/40 rounded-full relative transition-colors duration-200"
                   id="notifications-bell"
                 >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-brand-gold ring-2 ring-brand-blue-950" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-brand-gold text-brand-blue-950 text-[9px] font-bold ring-2 ring-brand-blue-950">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </button>
 
                 {showNotificationMenu && (
                   <div className="absolute right-0 mt-2 w-80 rounded-xl bg-brand-blue-900 border border-brand-gold/30 shadow-xl py-2 text-sm text-gray-200 z-50">
                     <div className="px-4 py-2 border-b border-brand-gold/10 flex justify-between items-center">
                       <span className="font-semibold text-brand-gold">Notifications</span>
-                      <span className="text-[10px] bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full">New</span>
                     </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {notifications.map((n) => (
-                        <div key={n.id} className="px-4 py-3 hover:bg-brand-blue-950/50 border-b border-brand-gold/5 transition-colors duration-150">
-                          <p className="text-xs text-gray-200">{n.text}</p>
-                          <span className="text-[10px] text-gray-400 block mt-1 font-mono">{n.time}</span>
-                        </div>
-                      ))}
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <p className="px-4 py-6 text-xs text-gray-400 text-center">Nothing yet.</p>
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n.id} className="px-4 py-3 hover:bg-brand-blue-950/50 border-b border-brand-gold/5 transition-colors duration-150">
+                            <p className="text-xs text-gray-200">{n.message}</p>
+                            <span className="text-[10px] text-gray-400 block mt-1 font-mono">{n.timeAgo}</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

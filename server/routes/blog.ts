@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
+import { notifyRole } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -45,6 +46,7 @@ router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: Aut
   });
 
   res.status(201).json({ post: shape(post) });
+  notifyRole('Student', `A new teaching was just published: "${title}"`);
 });
 
 export default router;

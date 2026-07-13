@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile, Course } from '../types';
 import { Award, Shield, Key, Sparkles, CheckCircle, FileText, X, Download, HelpCircle, Flame, Mail, Phone, Church, Save, Calendar } from 'lucide-react';
-import { getToken } from '../lib/api';
+import { uploadFile } from '../lib/uploadWithProgress';
 import { useTranslation } from '../translations';
 
 interface ProfileViewProps {
@@ -24,28 +24,25 @@ export default function ProfileView({
   const [editChurch, setEditChurch] = useState(profile.homeChurch);
   const [editBio, setEditBio] = useState(profile.bio);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarProgress, setAvatarProgress] = useState(0);
   const { t } = useTranslation();
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarUploading(true);
+    setAvatarProgress(0);
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      const res = await fetch('/api/uploads/avatar', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
+      const data = await uploadFile<{ user: any }>('/api/uploads/avatar', 'avatar', file, {
+        onProgress: setAvatarProgress,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Upload failed');
       onUpdateProfile({ avatar: data.user.avatar });
     } catch (err) {
       console.error('Avatar upload failed:', err);
       alert('Could not upload that photo. Please try a smaller image file.');
     } finally {
       setAvatarUploading(false);
+      setAvatarProgress(0);
       e.target.value = '';
     }
   };
@@ -92,7 +89,7 @@ export default function ProfileView({
               htmlFor="avatar-upload-input"
               className="absolute inset-1 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity duration-200 text-[10px] text-white font-semibold text-center px-1"
             >
-              {avatarUploading ? t('uploading') : t('changePhoto')}
+              {avatarUploading ? `${t('uploading')} ${avatarProgress}%` : t('changePhoto')}
             </label>
             <input
               id="avatar-upload-input"

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
+import { notifyUser, notifyRole } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ const postInclude = {
 function shape(post: any, currentUserId?: string) {
   return {
     id: post.id,
+    authorId: post.authorId,
     authorName: post.author.name,
     authorAvatar: post.author.avatar,
     authorRole: post.author.role,
@@ -81,14 +83,22 @@ router.post('/posts/:id/like', requireAuth, async (req: AuthedRequest, res) => {
     where: { postId_userId: { postId: req.params.id, userId: req.userId! } },
   });
 
+  let justLiked = false;
   if (existing) {
     await prisma.communityLike.delete({ where: { id: existing.id } });
   } else {
     await prisma.communityLike.create({ data: { postId: req.params.id, userId: req.userId! } });
+    justLiked = true;
   }
 
   const post = await prisma.communityPost.findUnique({ where: { id: req.params.id }, include: postInclude });
   if (!post) return res.status(404).json({ error: 'Post not found' });
+
+  if (justLiked && post.authorId !== req.userId) {
+    const liker = await prisma.user.findUnique({ where: { id: req.userId } });
+    notifyUser(post.authorId, `${liker?.name ?? 'Someone'} liked your post.`);
+  }
+
   res.json({ post: shape(post, req.userId) });
 });
 
@@ -97,14 +107,22 @@ router.post('/posts/:id/agree', requireAuth, async (req: AuthedRequest, res) => 
     where: { postId_userId: { postId: req.params.id, userId: req.userId! } },
   });
 
+  let justAgreed = false;
   if (existing) {
     await prisma.communityAgreement.delete({ where: { id: existing.id } });
   } else {
     await prisma.communityAgreement.create({ data: { postId: req.params.id, userId: req.userId! } });
+    justAgreed = true;
   }
 
   const post = await prisma.communityPost.findUnique({ where: { id: req.params.id }, include: postInclude });
   if (!post) return res.status(404).json({ error: 'Post not found' });
+
+  if (justAgreed && post.authorId !== req.userId) {
+    const agreer = await prisma.user.findUnique({ where: { id: req.userId } });
+    notifyUser(post.authorId, `${agreer?.name ?? 'Someone'} is standing in prayer agreement with your post.`);
+  }
+
   res.json({ post: shape(post, req.userId) });
 });
 
@@ -118,7 +136,25 @@ router.post('/posts/:id/comments', requireAuth, async (req: AuthedRequest, res) 
 
   const post = await prisma.communityPost.findUnique({ where: { id: req.params.id }, include: postInclude });
   if (!post) return res.status(404).json({ error: 'Post not found' });
+
+  if (post.authorId !== req.userId) {
+    const commenter = await prisma.user.findUnique({ where: { id: req.userId } });
+    notifyUser(post.authorId, `${commenter?.name ?? 'Someone'} commented on your post.`);
+  }
+
   res.status(201).json({ post: shape(post, req.userId) });
+});
+
+// Delete a post — the author, or an Admin, only.
+router.delete('/posts/:id', requireAuth, async (req: AuthedRequest, res) => {
+  const post = await prisma.communityPost.findUnique({ where: { id: req.params.id } });
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  if (post.authorId !== req.userId && req.userRole !== 'Admin') {
+    return res.status(403).json({ error: 'You can only delete your own posts' });
+  }
+
+  await prisma.communityPost.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
 });
 
 router.get('/live-sessions', requireAuth, async (_req, res) => {
@@ -168,6 +204,8 @@ router.post('/live-sessions', requireAuth, requireRole('Admin'), async (req: Aut
       category: session.category,
     },
   });
+
+  notifyRole('Student', `A new live session was just created: "${title}"`);
 });
 
 export default router;

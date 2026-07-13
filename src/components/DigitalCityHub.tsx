@@ -4,10 +4,11 @@ import {
   Flame, Sparkles, MessageSquare, Heart, Video, Users, Share2, 
   Send, Plus, ChevronRight, Image as ImageIcon, Check, Mic, MicOff, 
   VideoOff, ShieldAlert, Radio, HelpCircle, Trophy, Globe, ArrowLeft,
-  Tv, Eye, Play, Sparkle, AlertCircle
+  Tv, Eye, Play, Sparkle, AlertCircle, Trash2
 } from 'lucide-react';
 import { useTranslation } from '../translations';
-import { api, getToken } from '../lib/api';
+import { api } from '../lib/api';
+import { uploadFile } from '../lib/uploadWithProgress';
 
 interface DigitalCityHubProps {
   profile: UserProfile;
@@ -17,6 +18,7 @@ interface DigitalCityHubProps {
   onLikePost: (id: string) => void;
   onAgreePost: (id: string) => void;
   onAddComment: (postId: string, text: string) => void;
+  onDeletePost: (id: string) => void;
   onOpenGroups: () => void;
 }
 
@@ -28,6 +30,7 @@ export default function DigitalCityHub({
   onLikePost,
   onAgreePost,
   onAddComment,
+  onDeletePost,
   onOpenGroups
 }: DigitalCityHubProps) {
   const { lang, t } = useTranslation();
@@ -47,9 +50,11 @@ export default function DigitalCityHub({
   const [gatherPostPhoto, setGatherPostPhoto] = useState(''); // holds an uploaded photo URL
   const [showGatherPhotoInput, setShowGatherPhotoInput] = useState(false);
   const [gatherMediaUploading, setGatherMediaUploading] = useState<'image' | 'video' | null>(null);
+  const [gatherMediaProgress, setGatherMediaProgress] = useState(0);
 
   type GatherPost = {
     id: string;
+    authorId?: string;
     authorName: string;
     authorAvatar: string;
     authorRole: string;
@@ -65,6 +70,7 @@ export default function DigitalCityHub({
 
   const toGatherPost = (p: CommunityPost): GatherPost => ({
     id: p.id,
+    authorId: p.authorId,
     authorName: p.authorName,
     authorAvatar: p.authorAvatar,
     authorRole: p.authorRole,
@@ -108,16 +114,11 @@ export default function DigitalCityHub({
       return;
     }
     setGatherMediaUploading(kind === 'photo' ? 'image' : 'video');
+    setGatherMediaProgress(0);
     try {
-      const formData = new FormData();
-      formData.append('media', file);
-      const res = await fetch('/api/uploads/media', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
+      const data = await uploadFile<{ url: string }>('/api/uploads/media', 'media', file, {
+        onProgress: setGatherMediaProgress,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Upload failed');
       if (kind === 'photo') { setGatherPostPhoto(data.url); setGatherPostYoutube(''); }
       else { setGatherPostYoutube(data.url); setGatherPostPhoto(''); }
     } catch (err) {
@@ -125,6 +126,7 @@ export default function DigitalCityHub({
       alert('Could not upload that file. Please try again.');
     } finally {
       setGatherMediaUploading(null);
+      setGatherMediaProgress(0);
       e.target.value = '';
     }
   };
@@ -148,6 +150,16 @@ export default function DigitalCityHub({
       setNewGatherCommentText((prev) => ({ ...prev, [postId]: '' }));
     } catch (err) {
       console.error('Comment failed:', err);
+    }
+  };
+
+  const handleDeleteGatherPost = async (id: string) => {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    try {
+      await api.delete(`/community/posts/${id}`);
+      setGatherPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error('Delete post failed:', err);
     }
   };
 
@@ -179,6 +191,7 @@ export default function DigitalCityHub({
   const [postImage, setPostImage] = useState('');
   const [postVideo, setPostVideo] = useState('');
   const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | null>(null);
+  const [mediaUploadProgress, setMediaUploadProgress] = useState(0);
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video') => {
     const file = e.target.files?.[0];
@@ -189,16 +202,11 @@ export default function DigitalCityHub({
       return;
     }
     setMediaUploading(kind === 'photo' ? 'image' : 'video');
+    setMediaUploadProgress(0);
     try {
-      const formData = new FormData();
-      formData.append('media', file);
-      const res = await fetch('/api/uploads/media', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
+      const data = await uploadFile<{ url: string }>('/api/uploads/media', 'media', file, {
+        onProgress: setMediaUploadProgress,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Upload failed');
       if (kind === 'photo') setPostImage(data.url);
       else setPostVideo(data.url);
     } catch (err) {
@@ -206,6 +214,7 @@ export default function DigitalCityHub({
       alert('Could not upload that file. Please try again.');
     } finally {
       setMediaUploading(null);
+      setMediaUploadProgress(0);
       e.target.value = '';
     }
   };
@@ -259,6 +268,11 @@ export default function DigitalCityHub({
 
     onAddComment(postId, text);
     setNewCommentText(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const handleDeletePost = (id: string) => {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    onDeletePost(id);
   };
 
   // Send message in virtual Zoom live session
@@ -798,7 +812,7 @@ export default function DigitalCityHub({
                       >
                         <Video className="w-4 h-4" />
                         <span>
-                          {gatherMediaUploading === 'video' ? 'Uploading…' : gatherPostYoutube ? 'Video attached ✓' : 'Add a video (max 50MB)'}
+                          {gatherMediaUploading === 'video' ? `Uploading… ${gatherMediaProgress}%` : gatherPostYoutube ? 'Video attached ✓' : 'Add a video (max 50MB)'}
                         </span>
                       </label>
                       <input
@@ -818,7 +832,7 @@ export default function DigitalCityHub({
                             className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
                           >
                             <ImageIcon className="w-4 h-4" />
-                            <span>{gatherMediaUploading === 'image' ? 'Uploading…' : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo'}</span>
+                            <span>{gatherMediaUploading === 'image' ? `Uploading… ${gatherMediaProgress}%` : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo'}</span>
                           </label>
                           <input
                             id="gather-photo-upload"
@@ -905,9 +919,20 @@ export default function DigitalCityHub({
                                 </div>
                               </div>
 
-                              <span className="text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
-                                {post.category}
-                              </span>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                  {post.category}
+                                </span>
+                                {(post.authorId === profile.id || profile.role === 'Admin') && (
+                                  <button
+                                    onClick={() => handleDeleteGatherPost(post.id)}
+                                    className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Delete post"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
                             {/* Content */}
@@ -1052,7 +1077,7 @@ export default function DigitalCityHub({
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <ImageIcon className="w-4 h-4" />
-                              <span>{mediaUploading === 'image' ? 'Uploading…' : postImage ? 'Photo attached ✓' : 'Add a photo'}</span>
+                              <span>{mediaUploading === 'image' ? `Uploading… ${mediaUploadProgress}%` : postImage ? 'Photo attached ✓' : 'Add a photo'}</span>
                             </label>
                             <input
                               id="digital-city-photo-upload"
@@ -1069,7 +1094,7 @@ export default function DigitalCityHub({
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <Video className="w-4 h-4" />
-                              <span>{mediaUploading === 'video' ? 'Uploading…' : postVideo ? 'Video attached ✓' : 'Add a video (max 50MB)'}</span>
+                              <span>{mediaUploading === 'video' ? `Uploading… ${mediaUploadProgress}%` : postVideo ? 'Video attached ✓' : 'Add a video (max 50MB)'}</span>
                             </label>
                             <input
                               id="digital-city-video-upload"
@@ -1117,18 +1142,29 @@ export default function DigitalCityHub({
                             </div>
                           </div>
 
-                          {/* Category Badge */}
-                          <span className={`text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full ${
-                            post.category === 'testimony' 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : post.category === 'prophetic'
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                              : post.category === 'prayer-alarm'
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                              : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          }`}>
-                            {post.category}
-                          </span>
+                          {/* Category Badge + Delete */}
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full ${
+                              post.category === 'testimony' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : post.category === 'prophetic'
+                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                                : post.category === 'prayer-alarm'
+                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            }`}>
+                              {post.category}
+                            </span>
+                            {(post.authorId === profile.id || profile.role === 'Admin') && (
+                              <button
+                                onClick={() => handleDeletePost(post.id)}
+                                className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete post"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {/* Content Body */}
@@ -1286,7 +1322,7 @@ export default function DigitalCityHub({
                             <button
                               onClick={() => {
                                 setActiveSession(sess);
-                                setSanctuaryAgreementFlames(1240);
+                                setSanctuaryAgreementFlames(0);
                               }}
                               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-mono text-xs uppercase font-bold tracking-wider rounded-xl cursor-pointer flex items-center space-x-1.5"
                             >
