@@ -28,7 +28,7 @@ export default function VisitorHome({
     : courses.filter(c => c.category === selectedCategory);
 
   const featuredPost = blogPosts.find(p => p.featured) || blogPosts[0];
-  const regularPosts = blogPosts.filter(p => p.id !== featuredPost.id).slice(0, 2);
+  const regularPosts = featuredPost ? blogPosts.filter(p => p.id !== featuredPost.id).slice(0, 2) : [];
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800" id="visitor-home-page">
@@ -283,6 +283,7 @@ export default function VisitorHome({
             </p>
           </div>
 
+          {featuredPost ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Featured Post Card (Span 2) */}
@@ -351,6 +352,11 @@ export default function VisitorHome({
             </div>
 
           </div>
+          ) : (
+            <div className="text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200">
+              <p className="text-sm text-slate-500">No teachings have been published yet — check back soon.</p>
+            </div>
+          )}
 
           {/* CTA prompting user to login/sign up */}
           <div className="mt-12 bg-gradient-to-r from-brand-blue-950 to-brand-blue-900 rounded-2xl p-6 sm:p-8 border border-brand-gold/20 flex flex-col md:flex-row items-center justify-between">
