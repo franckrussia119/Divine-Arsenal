@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Course, BlogPost } from '../types';
 import { initialPrayerPoints } from '../data';
@@ -23,6 +23,20 @@ export default function VisitorHome({
   const { lang, t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'Spiritual Warfare' | 'Fasting & Discipleship'>('all');
 
+  const heroBackgrounds = [
+    'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&q=80&w=1600',
+    'https://images.unsplash.com/photo-1476231682828-37e571bc172f?auto=format&fit=crop&q=80&w=1600',
+    'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=1600',
+  ];
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroSlide((prev) => (prev + 1) % heroBackgrounds.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   const filteredCourses = selectedCategory === 'all'
     ? courses
@@ -36,17 +50,35 @@ export default function VisitorHome({
       
       {/* 1. Hero Section */}
       <section className="relative overflow-hidden bg-brand-blue-950 text-white py-20 lg:py-32 border-b border-brand-gold/30">
-        {/* Ambient spiritual lighting backgrounds */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.3)_0,transparent_100%)]"></div>
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-gold/5 blur-3xl"></div>
-        <div className="absolute -bottom-20 right-10 w-80 h-80 rounded-full bg-brand-gold/5 blur-3xl"></div>
-        {/* Logo watermark */}
-        <img
-          src="/logo.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 m-auto w-[600px] max-w-none opacity-[0.06] pointer-events-none select-none"
-        />
+        {/* Sliding background photos */}
+        <div className="absolute inset-0">
+          {heroBackgrounds.map((src, i) => (
+            <img
+              key={src}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+                i === heroSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          ))}
+          {/* Darken photos so text stays readable, and keep the brand tint */}
+          <div className="absolute inset-0 bg-brand-blue-950/80"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.15)_0,transparent_100%)]"></div>
+        </div>
+
+        {/* Slide indicator dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+          {heroBackgrounds.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setHeroSlide(i)}
+              aria-label={`Show background ${i + 1}`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${i === heroSlide ? 'bg-brand-gold w-6' : 'bg-white/30'}`}
+            />
+          ))}
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">

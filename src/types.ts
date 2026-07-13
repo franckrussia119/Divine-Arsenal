@@ -141,6 +141,15 @@ export interface CommunityPost {
   comments: CommunityComment[];
   isLiked?: boolean;
   isAgreed?: boolean;
+  groupId?: string;
+}
+
+export interface GroupMember {
+  userId: string;
+  name: string;
+  avatar: string;
+  role: 'member' | 'admin';
+  joinedAt: string;
 }
 
 export interface LiveSession {

@@ -10,6 +10,7 @@ import ProfileView from './components/ProfileView';
 import CounselorAdminDashboard from './components/CounselorAdminDashboard';
 import DigitalCityHub from './components/DigitalCityHub';
 import GroupsView from './components/GroupsView';
+import GroupDetailView from './components/GroupDetailView';
 import AuthScreen from './components/Auth/AuthScreen';
 
 import { UserRole, Course, BlogPost, PrayerPoint, JournalEntry, Message, CommunityPost, LiveSession } from './types';
@@ -28,6 +29,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('visitor-home');
   const [showAuth, setShowAuth] = useState(false);
   const [pendingEnrollCourseId, setPendingEnrollCourseId] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   // Catalog data (public — visible to everyone)
   const [allCourses, setAllCourses] = useState<Course[]>([]);
@@ -299,7 +301,10 @@ export default function App() {
       <Header
         currentRole={currentRole}
         currentTab={currentTab}
-        onChangeTab={setCurrentTab}
+        onChangeTab={(tab) => {
+          setCurrentTab(tab);
+          setSelectedGroupId(null);
+        }}
         profile={derivedProfile}
         onSignIn={() => setShowAuth(true)}
         onLogout={() => {
@@ -415,10 +420,17 @@ export default function App() {
                 onLikePost={handleLikeCommunityPost}
                 onAgreePost={handleAgreeCommunityPost}
                 onAddComment={handleAddCommunityComment}
+                onOpenGroups={() => { setSelectedGroupId(null); setCurrentTab('groups'); }}
               />
             )}
 
-            {currentTab === 'groups' && user && <GroupsView />}
+            {currentTab === 'groups' && user && (
+              selectedGroupId ? (
+                <GroupDetailView groupId={selectedGroupId} onBack={() => setSelectedGroupId(null)} />
+              ) : (
+                <GroupsView onSelectGroup={setSelectedGroupId} />
+              )
+            )}
 
             {((currentTab === 'counselor-dashboard' && currentRole === 'Counselor') ||
               (currentTab === 'admin-dashboard' && currentRole === 'Admin')) && (

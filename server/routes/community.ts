@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { requireAuth, AuthedRequest } from '../middleware/auth.js';
+import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -24,6 +24,7 @@ function shape(post: any, currentUserId?: string) {
     prayerAgreements: post.agreements.length,
     dateStr: post.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     category: post.category,
+    groupId: post.groupId ?? undefined,
     isLiked: currentUserId ? post.likes.some((l: any) => l.userId === currentUserId) : false,
     isAgreed: currentUserId ? post.agreements.some((a: any) => a.userId === currentUserId) : false,
     comments: post.comments.map((c: any) => ({
@@ -38,7 +39,9 @@ function shape(post: any, currentUserId?: string) {
 }
 
 router.get('/posts', requireAuth, async (req: AuthedRequest, res) => {
+  const groupId = typeof req.query.groupId === 'string' ? req.query.groupId : undefined;
   const posts = await prisma.communityPost.findMany({
+    where: groupId ? { groupId } : { groupId: null },
     include: postInclude,
     orderBy: { createdAt: 'desc' },
   });
@@ -46,8 +49,15 @@ router.get('/posts', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
-  const { content, imageUrl, videoUrl, category } = req.body ?? {};
+  const { content, imageUrl, videoUrl, category, groupId } = req.body ?? {};
   if (!content) return res.status(400).json({ error: 'Post content is required' });
+
+  if (groupId) {
+    const membership = await prisma.groupMembership.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId! } },
+    });
+    if (!membership) return res.status(403).json({ error: 'Join this group before posting in it' });
+  }
 
   const post = await prisma.communityPost.create({
     data: {
@@ -56,6 +66,7 @@ router.post('/posts', requireAuth, async (req: AuthedRequest, res) => {
       videoUrl: videoUrl ?? null,
       category: category ?? 'teaching',
       authorId: req.userId!,
+      groupId: groupId ?? null,
     },
     include: postInclude,
   });
@@ -120,6 +131,39 @@ router.get('/live-sessions', requireAuth, async (_req, res) => {
       scheduledTime: s.scheduledTime ?? undefined,
       category: s.category,
     })),
+  });
+});
+
+// Admin only — create a real live session (replaces the old fake seeded ones).
+router.post('/live-sessions', requireAuth, requireRole('Admin'), async (req: AuthedRequest, res) => {
+  const { title, category, status, scheduledTime } = req.body ?? {};
+  if (!title) return res.status(400).json({ error: 'Title is required' });
+
+  const host = await prisma.user.findUnique({ where: { id: req.userId } });
+
+  const session = await prisma.liveSession.create({
+    data: {
+      title,
+      category: category ?? 'Teaching Masterclass',
+      status: status === 'live' ? 'live' : 'upcoming',
+      scheduledTime: scheduledTime ?? null,
+      hostName: host?.name ?? '',
+      hostAvatar: host?.avatar ?? '',
+      viewerCount: 0,
+    },
+  });
+
+  res.status(201).json({
+    session: {
+      id: session.id,
+      title: session.title,
+      hostName: session.hostName,
+      hostAvatar: session.hostAvatar,
+      viewerCount: session.viewerCount,
+      status: session.status,
+      scheduledTime: session.scheduledTime ?? undefined,
+      category: session.category,
+    },
   });
 });
 

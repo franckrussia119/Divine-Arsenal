@@ -4,7 +4,11 @@ import { Group } from '../types';
 import { api } from '../lib/api';
 import { useTranslation } from '../translations';
 
-export default function GroupsView() {
+interface GroupsViewProps {
+  onSelectGroup: (groupId: string) => void;
+}
+
+export default function GroupsView({ onSelectGroup }: GroupsViewProps) {
   const { t } = useTranslation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +122,11 @@ export default function GroupsView() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {groups.map((g) => (
-              <div key={g.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+              <div
+                key={g.id}
+                onClick={() => onSelectGroup(g.id)}
+                className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col cursor-pointer hover:border-brand-gold/50 hover:shadow-md transition-all duration-200"
+              >
                 <h3 className="font-serif text-lg font-bold text-brand-blue-950">{g.name}</h3>
                 <p className="text-xs text-slate-500 mt-1 flex-1 line-clamp-3">{g.description || '—'}</p>
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
@@ -126,7 +134,7 @@ export default function GroupsView() {
                     {g.memberCount} {t('members')}
                   </span>
                   <button
-                    onClick={() => handleToggleMembership(g)}
+                    onClick={(e) => { e.stopPropagation(); handleToggleMembership(g); }}
                     disabled={busyId === g.id}
                     className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-60 ${
                       g.isMember

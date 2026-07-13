@@ -6,8 +6,9 @@ import { randomUUID } from 'crypto';
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.resolve(process.cwd(), 'uploads');
 const AVATARS_DIR = path.join(UPLOADS_DIR, 'avatars');
 const VIDEOS_DIR = path.join(UPLOADS_DIR, 'videos');
+const MEDIA_DIR = path.join(UPLOADS_DIR, 'media');
 
-for (const dir of [UPLOADS_DIR, AVATARS_DIR, VIDEOS_DIR]) {
+for (const dir of [UPLOADS_DIR, AVATARS_DIR, VIDEOS_DIR, MEDIA_DIR]) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
@@ -35,6 +36,19 @@ export const uploadVideo = multer({
   limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith('video/')) return cb(new Error('Only video files are allowed'));
+    cb(null, true);
+  },
+});
+
+// General-purpose uploader for community posts (Zion Digital City) — any
+// signed-in user, images or videos, capped at 50MB per your requirement.
+export const uploadMedia = multer({
+  storage: makeStorage(MEDIA_DIR),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/')) {
+      return cb(new Error('Only image or video files are allowed'));
+    }
     cb(null, true);
   },
 });

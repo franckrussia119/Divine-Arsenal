@@ -188,6 +188,8 @@ model CommunityPost {
   category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   comments   CommunityComment[]
@@ -247,6 +249,7 @@ model Group {
   createdAt   DateTime @default(now())
 
   members GroupMembership[]
+  posts   CommunityPost[]
 }
 
 model GroupMembership {

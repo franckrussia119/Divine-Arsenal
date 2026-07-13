@@ -7,6 +7,7 @@ import {
   Tv, Eye, Play, Sparkle, AlertCircle
 } from 'lucide-react';
 import { useTranslation } from '../translations';
+import { getToken } from '../lib/api';
 
 interface DigitalCityHubProps {
   profile: UserProfile;
@@ -16,6 +17,7 @@ interface DigitalCityHubProps {
   onLikePost: (id: string) => void;
   onAgreePost: (id: string) => void;
   onAddComment: (postId: string, text: string) => void;
+  onOpenGroups: () => void;
 }
 
 export default function DigitalCityHub({
@@ -25,7 +27,8 @@ export default function DigitalCityHub({
   onCreatePost,
   onLikePost,
   onAgreePost,
-  onAddComment
+  onAddComment,
+  onOpenGroups
 }: DigitalCityHubProps) {
   const { lang, t } = useTranslation();
 
@@ -131,6 +134,37 @@ export default function DigitalCityHub({
   const [postCategory, setPostCategory] = useState<'testimony' | 'prophetic' | 'prayer-alarm' | 'teaching'>('prophetic');
   const [postImage, setPostImage] = useState('');
   const [postVideo, setPostVideo] = useState('');
+  const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | null>(null);
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('That file is larger than 50MB. Please choose a smaller one.');
+      e.target.value = '';
+      return;
+    }
+    setMediaUploading(kind === 'photo' ? 'image' : 'video');
+    try {
+      const formData = new FormData();
+      formData.append('media', file);
+      const res = await fetch('/api/uploads/media', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      if (kind === 'photo') setPostImage(data.url);
+      else setPostVideo(data.url);
+    } catch (err) {
+      console.error('Media upload failed:', err);
+      alert('Could not upload that file. Please try again.');
+    } finally {
+      setMediaUploading(null);
+      e.target.value = '';
+    }
+  };
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Comments inline states
@@ -266,6 +300,13 @@ export default function DigitalCityHub({
             >
               <Radio className="w-4 h-4 text-red-500 animate-pulse" />
               <span>{lang === 'fr' ? `Sanctuaires en Direct (${sessions.filter(s => s.status === 'live').length})` : `Live Sanctuaries (${sessions.filter(s => s.status === 'live').length})`}</span>
+            </button>
+            <button
+              onClick={onOpenGroups}
+              className="px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 bg-slate-800 text-slate-300 hover:bg-slate-700"
+            >
+              <Users className="w-4 h-4" />
+              <span>{t('groups')}</span>
             </button>
           </div>
         </div>
@@ -939,26 +980,40 @@ export default function DigitalCityHub({
                           required
                         />
 
-                        {/* Media attachment selectors */}
+                        {/* Media attachment uploads (real files, 50MB max) */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[9px] text-slate-400 font-mono uppercase mb-1">Unsplash Image Url (optional)</label>
+                            <label
+                              htmlFor="digital-city-photo-upload"
+                              className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
+                            >
+                              <ImageIcon className="w-4 h-4" />
+                              <span>{mediaUploading === 'image' ? 'Uploading…' : postImage ? 'Photo attached ✓' : 'Add a photo'}</span>
+                            </label>
                             <input
-                              type="text"
-                              value={postImage}
-                              onChange={(e) => setPostImage(e.target.value)}
-                              placeholder="e.g. https://images.unsplash.com/..."
-                              className="w-full bg-slate-900 border border-slate-800 text-xs p-2 rounded-lg text-slate-300 outline-none focus:border-brand-gold"
+                              id="digital-city-photo-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={!!mediaUploading}
+                              onChange={(e) => handleMediaUpload(e, 'photo')}
                             />
                           </div>
                           <div>
-                            <label className="block text-[9px] text-slate-400 font-mono uppercase mb-1">HTML5 / Web Video Url (optional)</label>
+                            <label
+                              htmlFor="digital-city-video-upload"
+                              className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
+                            >
+                              <Video className="w-4 h-4" />
+                              <span>{mediaUploading === 'video' ? 'Uploading…' : postVideo ? 'Video attached ✓' : 'Add a video (max 50MB)'}</span>
+                            </label>
                             <input
-                              type="text"
-                              value={postVideo}
-                              onChange={(e) => setPostVideo(e.target.value)}
-                              placeholder="e.g. https://www.w3schools.com/html/movie.mp4"
-                              className="w-full bg-slate-900 border border-slate-800 text-xs p-2 rounded-lg text-slate-300 outline-none focus:border-brand-gold"
+                              id="digital-city-video-upload"
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              disabled={!!mediaUploading}
+                              onChange={(e) => handleMediaUpload(e, 'video')}
                             />
                           </div>
                         </div>

@@ -450,39 +450,8 @@ async function main() {
     console.log('Created sample community posts.');
   }
 
-  // --- Live sessions ---
-  if ((await prisma.liveSession.count()) === 0) {
-    await prisma.liveSession.createMany({
-      data: [
-        {
-          title: 'Midnight Altar: Tearing Down Regional Strongholds',
-          hostName: admin.name,
-          hostAvatar: admin.avatar,
-          viewerCount: 412,
-          status: 'live',
-          category: 'Midnight Altar',
-        },
-        {
-          title: 'Gate of Judah: Prophetic Worship & Healing Rain',
-          hostName: chioma.name,
-          hostAvatar: chioma.avatar,
-          viewerCount: 184,
-          status: 'live',
-          category: 'Intercession',
-        },
-        {
-          title: 'Interpretation Masterclass: Translating Angelic Whispers',
-          hostName: marcus.name,
-          hostAvatar: marcus.avatar,
-          viewerCount: 0,
-          status: 'upcoming',
-          scheduledTime: 'Tonight at 8:00 PM EST',
-          category: 'Teaching Masterclass',
-        },
-      ],
-    });
-    console.log('Created sample live sessions.');
-  }
+  // Note: live sessions are intentionally NOT seeded with fake data.
+  // Admins create real ones from the Admin Console.
 
   console.log('\nDemo logins (all use password "%s"):', DEMO_PASSWORD);
   console.log('  Student:   daniel@divinearsenal.org');

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
-import { uploadAvatar, uploadVideo } from '../lib/uploads.js';
+import { uploadAvatar, uploadVideo, uploadMedia } from '../lib/uploads.js';
 
 const router = Router();
 
@@ -13,6 +13,18 @@ router.post('/avatar', requireAuth, uploadAvatar.single('avatar'), async (req: A
 
   const { password, ...publicUser } = user;
   res.json({ user: publicUser });
+});
+
+// Any signed-in user — photos/videos for Zion Digital City posts. 50MB cap.
+router.post('/media', requireAuth, (req, res, next) => {
+  uploadMedia.single('media')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Upload failed (max size is 50MB)' });
+    next();
+  });
+}, async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file was uploaded' });
+  const type = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+  res.status(201).json({ url: `/uploads/media/${req.file.filename}`, type });
 });
 
 // Admin/Counselor only — used when building a course's lessons.

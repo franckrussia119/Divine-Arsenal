@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Course, BlogPost, PrayerPoint } from '../types';
-import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3 } from 'lucide-react';
+import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3, Video } from 'lucide-react';
 import { api, getToken } from '../lib/api';
 
 interface AdminStats {
@@ -97,6 +97,34 @@ export default function CounselorAdminDashboard({
       alert('Could not upload that video. Please try a smaller file.');
     } finally {
       setCourseVideoUploading(false);
+    }
+  };
+
+  // Admin-only: create a real live session
+  const [liveTitle, setLiveTitle] = useState('');
+  const [liveCategory, setLiveCategory] = useState('Teaching Masterclass');
+  const [liveStatus, setLiveStatus] = useState<'live' | 'upcoming'>('upcoming');
+  const [liveScheduledTime, setLiveScheduledTime] = useState('');
+  const [liveCreating, setLiveCreating] = useState(false);
+
+  const handleCreateLiveSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!liveTitle) return;
+    setLiveCreating(true);
+    try {
+      await api.post('/community/live-sessions', {
+        title: liveTitle,
+        category: liveCategory,
+        status: liveStatus,
+        scheduledTime: liveStatus === 'upcoming' ? liveScheduledTime : undefined,
+      });
+      triggerNotification(`Live session "${liveTitle}" created!`);
+      setLiveTitle('');
+      setLiveScheduledTime('');
+    } catch (err: any) {
+      alert(err?.message || 'Could not create that live session.');
+    } finally {
+      setLiveCreating(false);
     }
   };
 
@@ -621,6 +649,62 @@ export default function CounselorAdminDashboard({
                     ))
                   )}
                 </div>
+              </div>
+
+              {/* Create Live Session */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4 flex items-center">
+                  <Video className="w-5 h-5 mr-2 text-brand-gold" /> Create Live Session
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  This replaces the old fake demo sessions — real ones you create here show up in the Live Lobby.
+                </p>
+                <form onSubmit={handleCreateLiveSession} className="space-y-4 text-xs">
+                  <input
+                    type="text"
+                    value={liveTitle}
+                    onChange={(e) => setLiveTitle(e.target.value)}
+                    placeholder="Session title"
+                    className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                    required
+                  />
+                  <select
+                    value={liveCategory}
+                    onChange={(e) => setLiveCategory(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50"
+                  >
+                    <option value="Teaching Masterclass">Teaching Masterclass</option>
+                    <option value="Intercession">Intercession</option>
+                    <option value="Midnight Altar">Midnight Altar</option>
+                    <option value="Prophetic Word">Prophetic Word</option>
+                  </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select
+                      value={liveStatus}
+                      onChange={(e) => setLiveStatus(e.target.value as 'live' | 'upcoming')}
+                      className="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50"
+                    >
+                      <option value="upcoming">Upcoming</option>
+                      <option value="live">Live now</option>
+                    </select>
+                    {liveStatus === 'upcoming' && (
+                      <input
+                        type="text"
+                        value={liveScheduledTime}
+                        onChange={(e) => setLiveScheduledTime(e.target.value)}
+                        placeholder="e.g. Tonight at 8PM"
+                        className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:border-brand-gold"
+                      />
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={liveCreating}
+                    className="w-full py-3 bg-brand-blue-950 text-white font-bold uppercase tracking-wider rounded-xl hover:bg-brand-blue-900 cursor-pointer disabled:opacity-60"
+                  >
+                    {liveCreating ? 'Creating…' : 'Create Live Session'}
+                  </button>
+                </form>
               </div>
 
             </div>
