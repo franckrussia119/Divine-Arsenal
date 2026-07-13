@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { BlogPost } from '../types';
 import { Search, ChevronRight, Compass, Calendar, Clock, X, Sparkles, BookOpen, Heart } from 'lucide-react';
+import ShareButton from './ShareButton';
 
 interface BlogViewProps {
   posts: BlogPost[];
@@ -200,6 +201,7 @@ export default function BlogView({
                   <span>Published: {selectedPost.date}</span>
                   <span>•</span>
                   <span>{selectedPost.readTime}</span>
+                  <ShareButton title={selectedPost.title} path={`/?view=blog&postId=${selectedPost.id}`} />
                 </div>
               </div>
 

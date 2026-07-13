@@ -60,7 +60,7 @@ export default function Header({
           { label: t('podcast'), tab: 'podcast' },
         ];
 
-  const [notifications, setNotifications] = useState<{ id: string; message: string; timeAgo: string; read: boolean }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; message: string; timeAgo: string; read: boolean; link?: string }[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const loadNotifications = () => {
@@ -436,7 +436,18 @@ export default function Header({
                         <p className="px-4 py-6 text-xs text-gray-400 text-center">Nothing yet.</p>
                       ) : (
                         notifications.map((n) => (
-                          <div key={n.id} className="px-4 py-3 hover:bg-brand-blue-950/50 border-b border-brand-gold/5 transition-colors duration-150">
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              if (n.link) {
+                                setShowNotificationMenu(false);
+                                window.location.href = n.link;
+                              }
+                            }}
+                            className={`px-4 py-3 border-b border-brand-gold/5 transition-colors duration-150 ${
+                              n.link ? 'cursor-pointer hover:bg-brand-blue-950/50' : ''
+                            }`}
+                          >
                             <p className="text-xs text-gray-200">{n.message}</p>
                             <span className="text-[10px] text-gray-400 block mt-1 font-mono">{n.timeAgo}</span>
                           </div>

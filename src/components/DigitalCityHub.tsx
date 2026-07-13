@@ -9,6 +9,7 @@ import {
 import { useTranslation } from '../translations';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/uploadWithProgress';
+import ShareButton from './ShareButton';
 
 interface DigitalCityHubProps {
   profile: UserProfile;
@@ -1004,6 +1005,8 @@ export default function DigitalCityHub({
                                 <MessageSquare className="w-4 h-4" />
                                 <span>{post.comments.length} Comments</span>
                               </button>
+
+                              <ShareButton title={post.content.slice(0, 60)} path={`/?view=community`} dark />
                             </div>
 
                             {/* Comment Thread */}
@@ -1275,6 +1278,8 @@ export default function DigitalCityHub({
                             <MessageSquare className="w-4 h-4" />
                             <span>{post.comments.length} Scribes</span>
                           </button>
+
+                          <ShareButton title={post.content.slice(0, 60)} path={`/?view=community`} dark />
                         </div>
 
                         {/* Expanded comments thread */}

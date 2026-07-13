@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Course, Lesson, CourseModule, JournalEntry } from '../types';
 import { ChevronLeft, CheckCircle2, Circle, Play, BookOpen, Flame, Compass, MessageSquare, Save, CheckCircle, ChevronDown, ListPlus, Notebook } from 'lucide-react';
+import ShareButton from './ShareButton';
 
 interface CourseLessonViewProps {
   course: Course;
@@ -132,9 +133,12 @@ export default function CourseLessonView({
             {/* Title & Complete Action Row */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-blue-950">
-                  {activeLesson.title}
-                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-blue-950">
+                    {activeLesson.title}
+                  </h2>
+                  <ShareButton title={`${course.title} — ${activeLesson.title}`} path={`/?view=course&courseId=${course.id}`} />
+                </div>
                 <p className="text-xs text-slate-400 font-mono mt-1">
                   Lesson Estimated Reading/Study: {activeLesson.duration}
                 </p>

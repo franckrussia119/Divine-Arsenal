@@ -63,6 +63,41 @@ export default function App() {
       .finally(() => setCatalogLoaded(true));
   }, []);
 
+  // --- Deep-linking: shared "Share" buttons produce URLs like
+  // /?view=blog&postId=X or /?view=course&courseId=X — open that content directly. ---
+  useEffect(() => {
+    if (!catalogLoaded) return;
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    if (!view) return;
+
+    if (view === 'blog') {
+      const postId = params.get('postId');
+      const post = blogPosts.find((p) => p.id === postId);
+      if (post) {
+        setSelectedBlogPost(post);
+        setCurrentTab('blog');
+      }
+    } else if (view === 'course') {
+      const courseId = params.get('courseId');
+      const course = allCourses.find((c) => c.id === courseId);
+      if (course) {
+        if (!user) {
+          setPendingEnrollCourseId(course.id);
+          setShowAuth(true);
+        } else {
+          setActiveCourse(course);
+        }
+      }
+    } else if (view === 'community') {
+      setCurrentTab('community-city');
+    }
+
+    // Clean the URL so refreshing/navigating doesn't keep re-triggering this.
+    window.history.replaceState({}, '', window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogLoaded]);
+
   // --- Load the signed-in user's private data whenever they log in/out ---
   useEffect(() => {
     if (!user) {

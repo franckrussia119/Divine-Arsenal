@@ -18,6 +18,7 @@ import uploadRoutes from './routes/uploads.js';
 import notificationRoutes from './routes/notifications.js';
 import musicRoutes from './routes/music.js';
 import podcastRoutes from './routes/podcast.js';
+import shareRoutes from './routes/share.js';
 import { UPLOADS_DIR } from './lib/uploads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +47,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/music', musicRoutes);
 app.use('/api/podcast', podcastRoutes);
+app.use('/api/share', shareRoutes);
 
 // In production, the frontend is built into ../dist and served as static files,
 // with a catch-all so client-side routing/refreshes still work.
