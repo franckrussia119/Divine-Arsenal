@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { Course, BlogPost } from '../types';
+import { initialPrayerPoints } from '../data';
 import { BookOpen, Sparkles, Flame, Shield, ArrowRight, Heart, Users, MessageSquare, Compass, Play, Calendar, Lock } from 'lucide-react';
 import { useTranslation } from '../translations';
 
