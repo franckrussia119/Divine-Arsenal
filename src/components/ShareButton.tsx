@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Share2, MessageCircle, Link2, Send, Check, Search, X } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -12,21 +13,50 @@ interface ShareButtonProps {
 
 export default function ShareButton({ title, path, className, dark }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ id: string; name: string; avatar: string }[]>([]);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const shareUrl = `${window.location.origin}${path}`;
+  const MENU_WIDTH = 256; // matches w-64 below
+
+  const computePosition = () => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const left = Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8);
+    const top = Math.min(rect.bottom + 8, window.innerHeight - 8);
+    setMenuPos({ top: Math.max(8, top), left: Math.max(8, left) });
+  };
+
+  const handleToggle = () => {
+    if (!open) computePosition();
+    setOpen((o) => !o);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => computePosition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setShowUserSearch(false);
-      }
+      const target = e.target as Node;
+      if (buttonRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
+      setShowUserSearch(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -42,6 +72,14 @@ export default function ShareButton({ title, path, className, dark }: ShareButto
     }, 300);
     return () => clearTimeout(t);
   }, [query]);
+
+  const closeAll = () => {
+    setOpen(false);
+    setShowUserSearch(false);
+    setSentTo(null);
+    setQuery('');
+    setResults([]);
+  };
 
   const handleNativeShare = async () => {
     if ((navigator as any).share) {
@@ -70,35 +108,34 @@ export default function ShareButton({ title, path, className, dark }: ShareButto
     try {
       await api.post('/share', { toUserId: userId, title, url: shareUrl });
       setSentTo(userId);
-      setTimeout(() => {
-        setOpen(false);
-        setShowUserSearch(false);
-        setSentTo(null);
-        setQuery('');
-        setResults([]);
-      }, 1200);
+      setTimeout(closeAll, 1200);
     } catch (err) {
       console.error('Share to user failed:', err);
     }
   };
 
   return (
-    <div ref={containerRef} className={`relative inline-block ${className ?? ''}`}>
+    <>
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={buttonRef}
+        onClick={handleToggle}
         className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
           dark
             ? 'border-slate-700 text-slate-400 hover:border-brand-gold hover:text-brand-gold'
             : 'border-slate-300 text-slate-600 hover:border-brand-gold hover:text-brand-gold-dark'
-        }`}
+        } ${className ?? ''}`}
         title="Share"
       >
         <Share2 className="w-3.5 h-3.5" />
         <span>Share</span>
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl z-50 py-2 text-sm">
+      {open && menuPos && createPortal(
+        <div
+          ref={menuRef}
+          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, width: MENU_WIDTH }}
+          className="bg-white rounded-xl border border-slate-200 shadow-2xl z-[9999] py-2 text-sm"
+        >
           {!showUserSearch ? (
             <>
               {typeof (navigator as any).share === 'function' && (
@@ -126,7 +163,7 @@ export default function ShareButton({ title, path, className, dark }: ShareButto
               </button>
               <div className="my-1 border-t border-slate-100" />
               <button
-                onClick={() => setShowUserSearch(true)}
+                onClick={() => { setShowUserSearch(true); computePosition(); }}
                 className="w-full flex items-center space-x-2 px-4 py-2.5 hover:bg-slate-50 text-slate-700"
               >
                 <Send className="w-4 h-4 text-brand-gold-dark" />
@@ -170,8 +207,9 @@ export default function ShareButton({ title, path, className, dark }: ShareButto
               </div>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
