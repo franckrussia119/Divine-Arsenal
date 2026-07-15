@@ -130,6 +130,14 @@ export default function DigitalCityHub({
 
   const [viewOverrides, setViewOverrides] = useState<Record<string, number>>({});
   const [showHeroInfo, setShowHeroInfo] = useState(false);
+  const [publicStats, setPublicStats] = useState<{ totalUsers: number; totalAnsweredPrayers: number } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats/public')
+      .then((r) => r.json())
+      .then(setPublicStats)
+      .catch(() => setPublicStats(null));
+  }, []);
   const [viewedThisSession, setViewedThisSession] = useState<Set<string>>(new Set());
 
   const trackView = async (postId: string) => {
@@ -690,8 +698,8 @@ export default function DigitalCityHub({
           /* STANDARD DIGITAL CITY LAYOUT (Feed & Lobby switcher) */
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             
-            {/* 1. LEFT SIDEBAR: CITY GATES & CHANNELS */}
-            <div className="space-y-6">
+            {/* 1. LEFT SIDEBAR: CITY GATES & CHANNELS — hidden on mobile by default, revealed via the (i) toggle up in the hero */}
+            <div className={`space-y-6 ${showHeroInfo ? '' : 'hidden'} lg:block`}>
               
               {/* Profile Card */}
               <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-sm text-center relative overflow-hidden">
@@ -805,19 +813,21 @@ export default function DigitalCityHub({
                 <div className="space-y-3.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400">Total Citizens Active</span>
-                    <span className="font-mono text-white font-bold">12,845</span>
+                    <span className="font-mono text-white font-bold">{publicStats ? publicStats.totalUsers : '—'}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Midnight Fire Altar Fires</span>
-                    <span className="font-mono text-brand-gold font-bold">● ACTIVE</span>
+                    <span className="text-slate-400">Live Sanctuaries Now</span>
+                    <span className={`font-mono font-bold ${sessions.some(s => s.status === 'live') ? 'text-brand-gold' : 'text-slate-500'}`}>
+                      {sessions.some(s => s.status === 'live') ? '● ACTIVE' : 'QUIET'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Decrees Raised Daily</span>
-                    <span className="font-mono text-white">4,892</span>
+                    <span className="text-slate-400">Total City Posts</span>
+                    <span className="font-mono text-white">{posts.length}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400">Answered testimonies</span>
-                    <span className="font-mono text-emerald-400 font-bold">+148</span>
+                    <span className="font-mono text-emerald-400 font-bold">{publicStats ? `+${publicStats.totalAnsweredPrayers}` : '—'}</span>
                   </div>
                 </div>
               </div>
