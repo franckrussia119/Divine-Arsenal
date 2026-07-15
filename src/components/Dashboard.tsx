@@ -40,53 +40,53 @@ export default function Dashboard({
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="student-dashboard">
       
       {/* 1. Header / Welcome banner */}
-      <div className="bg-brand-blue-950 text-white py-10 border-b border-brand-gold/20 relative overflow-hidden">
+      <div className="bg-brand-blue-950 text-white py-6 sm:py-10 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 blur-2xl rounded-full"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
           <div>
             <div className="flex items-center space-x-2 text-xs text-brand-gold font-mono uppercase tracking-widest mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Covenant Member Dashboard</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-white font-bold">
+            <h1 className="font-serif text-2xl sm:text-4xl text-white font-bold">
               Shalom, {profile.name}
             </h1>
-            <p className="text-slate-300 text-sm mt-1">
+            <p className="text-slate-300 text-xs sm:text-sm mt-1">
               "Set your mind on things above, where Christ is seated..." — Colossians 3:2
             </p>
           </div>
 
           {/* Core Stat Rings */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-brand-blue-900/60 p-4 rounded-2xl border border-brand-gold/10">
-            <div className="text-center px-4">
-              <span className="text-brand-gold font-mono text-xl font-bold block">{profile.streak}</span>
-              <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider">Devotion Streak</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 bg-brand-blue-900/60 p-3 sm:p-4 rounded-2xl border border-brand-gold/10">
+            <div className="text-center px-2 sm:px-4">
+              <span className="text-brand-gold font-mono text-lg sm:text-xl font-bold block">{profile.streak}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-mono tracking-wider">Devotion Streak</span>
             </div>
-            <div className="text-center px-4 border-l border-white/10">
-              <span className="text-brand-gold font-mono text-xl font-bold block">{profile.coursesCount}</span>
-              <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider">Active Courses</span>
+            <div className="text-center px-2 sm:px-4 border-l border-white/10">
+              <span className="text-brand-gold font-mono text-lg sm:text-xl font-bold block">{profile.coursesCount}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-mono tracking-wider">Active Courses</span>
             </div>
-            <div className="text-center px-4 border-l border-white/10">
-              <span className="text-brand-gold font-mono text-xl font-bold block">{profile.lessonsCount}</span>
-              <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider">Lessons Cleared</span>
+            <div className="text-center px-2 sm:px-4 border-l border-white/10">
+              <span className="text-brand-gold font-mono text-lg sm:text-xl font-bold block">{profile.lessonsCount}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-mono tracking-wider">Lessons Cleared</span>
             </div>
-            <div className="text-center px-4 border-l border-white/10">
-              <span className="text-brand-gold font-mono text-xl font-bold block">{profile.certificatesCount}</span>
-              <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider">Certificates</span>
+            <div className="text-center px-2 sm:px-4 border-l border-white/10">
+              <span className="text-brand-gold font-mono text-lg sm:text-xl font-bold block">{profile.certificatesCount}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase font-mono tracking-wider">Certificates</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. Main Grid Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Column 1 & 2 (Left/Center content) */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* The Living Word (Daily Verse) */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden" id="daily-verse-card">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden" id="daily-verse-card">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-gold"></div>
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs font-bold text-brand-gold-dark uppercase tracking-widest font-mono flex items-center">
@@ -116,7 +116,7 @@ export default function Dashboard({
             {/* Resume Current Course Curriculum */}
             {currentCourse && resumeInfo && (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="resume-course-card">
-                <div className="bg-brand-blue-900/5 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <div className="bg-brand-blue-900/5 px-4 sm:px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div>
                     <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
                       CONTINUE YOUR CURRICULUM
@@ -125,12 +125,12 @@ export default function Dashboard({
                       {currentCourse.title}
                     </h3>
                   </div>
-                  <span className="text-xs font-mono font-bold text-brand-gold-dark bg-brand-gold/10 px-3 py-1 rounded-full">
+                  <span className="text-xs font-mono font-bold text-brand-gold-dark bg-brand-gold/10 px-3 py-1 rounded-full self-start sm:self-auto">
                     {currentCourse.progress}% Completed
                   </span>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Progress bar */}
                   <div className="w-full bg-slate-100 rounded-full h-2 mb-6">
                     <div 
@@ -163,12 +163,15 @@ export default function Dashboard({
               </div>
             )}
 
-            {/* Quick Actions Shortcuts */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" id="quick-actions-grid">
+            {/* Quick Actions Shortcuts — horizontal swipe on phones, grid on larger screens */}
+            <div
+              className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              id="quick-actions-grid"
+            >
               
               <div 
                 onClick={() => onNavigate('war-room')}
-                className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md cursor-pointer transition-all duration-200 group"
+                className="shrink-0 w-[78%] xs:w-[70%] sm:w-auto snap-start bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md active:scale-[0.98] cursor-pointer transition-all duration-200 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-brand-blue-900/5 flex items-center justify-center text-brand-blue-900 mb-4 group-hover:bg-brand-gold/10 group-hover:text-brand-gold-dark transition-all">
                   <Shield className="w-5 h-5" />
@@ -183,7 +186,7 @@ export default function Dashboard({
 
               <div 
                 onClick={() => onNavigate('war-room')} // and sub-tab journal
-                className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md cursor-pointer transition-all duration-200 group"
+                className="shrink-0 w-[78%] xs:w-[70%] sm:w-auto snap-start bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md active:scale-[0.98] cursor-pointer transition-all duration-200 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-brand-blue-900/5 flex items-center justify-center text-brand-blue-900 mb-4 group-hover:bg-brand-gold/10 group-hover:text-brand-gold-dark transition-all">
                   <PenTool className="w-5 h-5" />
@@ -198,7 +201,7 @@ export default function Dashboard({
 
               <div 
                 onClick={() => onNavigate('war-room')} // counsel tab
-                className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md cursor-pointer transition-all duration-200 group"
+                className="shrink-0 w-[78%] xs:w-[70%] sm:w-auto snap-start bg-white p-5 rounded-2xl border border-slate-200 hover:border-brand-gold/40 hover:shadow-md active:scale-[0.98] cursor-pointer transition-all duration-200 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-brand-blue-900/5 flex items-center justify-center text-brand-blue-900 mb-4 group-hover:bg-brand-gold/10 group-hover:text-brand-gold-dark transition-all">
                   <MessageSquare className="w-5 h-5" />
@@ -219,7 +222,7 @@ export default function Dashboard({
           <div className="space-y-8">
             
             {/* Active Prayer Points list */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm" id="active-prayers-sidebar">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm" id="active-prayers-sidebar">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-serif font-bold text-brand-blue-950 text-lg">My Prayer Shields</h3>
                 <span className="text-[10px] text-slate-400 font-mono">

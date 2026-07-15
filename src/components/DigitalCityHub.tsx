@@ -386,7 +386,7 @@ export default function DigitalCityHub({
     <div className="bg-slate-900 min-h-screen text-slate-100 pb-16" id="digital-city-city-view">
       
       {/* 1. TOP HEADER / TITLE HERO FOR DIGITAL CITY */}
-      <div className="relative bg-gradient-to-b from-brand-blue-950 via-brand-blue-900 to-slate-900 border-b border-brand-gold/20 py-12 px-4 overflow-hidden">
+      <div className="relative bg-gradient-to-b from-brand-blue-950 via-brand-blue-900 to-slate-900 border-b border-brand-gold/20 py-8 sm:py-12 px-4 overflow-hidden">
         {/* Abstract lights mimicking futuristic spiritual city */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-gold/5 blur-3xl rounded-full animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/5 blur-3xl rounded-full"></div>
@@ -407,10 +407,10 @@ export default function DigitalCityHub({
             </p>
           </div>
 
-          <div className="mt-6 md:mt-0 flex space-x-3">
+          <div className="mt-6 md:mt-0 flex space-x-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <button
               onClick={() => { setActiveSubTab('gather'); setActiveSession(null); }}
-              className={`px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
                 activeSubTab === 'gather' && !activeSession
                   ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -421,7 +421,7 @@ export default function DigitalCityHub({
             </button>
             <button
               onClick={() => { setActiveSubTab('feed'); setActiveSession(null); }}
-              className={`px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
                 activeSubTab === 'feed' && !activeSession
                   ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -432,7 +432,7 @@ export default function DigitalCityHub({
             </button>
             <button
               onClick={() => { setActiveSubTab('live-lobby'); setActiveSession(null); }}
-              className={`px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
                 activeSubTab === 'live-lobby' || activeSession
                   ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -443,7 +443,7 @@ export default function DigitalCityHub({
             </button>
             <button
               onClick={onOpenGroups}
-              className="px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 bg-slate-800 text-slate-300 hover:bg-slate-700"
+              className="shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 bg-slate-800 text-slate-300 hover:bg-slate-700"
             >
               <Users className="w-4 h-4" />
               <span>{t('groups')}</span>
@@ -453,7 +453,7 @@ export default function DigitalCityHub({
       </div>
 
       {/* 2. CORE CONTAINER */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8">
         
         {/* IF A ZOOM-LIKE SANCTUARY SESSION IS ACTIVE */}
         {activeSession ? (
@@ -1307,17 +1307,17 @@ export default function DigitalCityHub({
                       <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-sm overflow-hidden transition-shadow duration-500" id={`community-post-${post.id}`}>
                         
                         {/* Feed Card Header */}
-                        <div className="p-5 flex items-start justify-between">
-                          <div className="flex items-center space-x-3.5">
+                        <div className="p-4 sm:p-5 flex items-start justify-between gap-2">
+                          <div className="flex items-center space-x-3.5 min-w-0">
                             <img
                               src={post.authorAvatar}
                               alt={post.authorName}
-                              className="w-11 h-11 rounded-full border border-slate-800 object-cover"
+                              className="w-11 h-11 rounded-full border border-slate-800 object-cover shrink-0"
                             />
-                            <div>
+                            <div className="min-w-0">
                               <div className="flex items-center space-x-2">
-                                <h4 className="font-serif text-sm font-bold text-white">{post.authorName}</h4>
-                                <span className="text-[8px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded uppercase font-mono border border-slate-800/80">
+                                <h4 className="font-serif text-sm font-bold text-white truncate">{post.authorName}</h4>
+                                <span className="text-[8px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded uppercase font-mono border border-slate-800/80 shrink-0">
                                   {post.authorRole}
                                 </span>
                               </div>
@@ -1326,7 +1326,7 @@ export default function DigitalCityHub({
                           </div>
 
                           {/* Category Badge + Delete */}
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 shrink-0">
                             <span className={`text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full ${
                               post.category === 'testimony' 
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
