@@ -124,7 +124,6 @@ export default function ProfileView({
               id="avatar-upload-input"
               type="file"
               accept="image/*"
-              capture="user"
               className="hidden"
               disabled={avatarUploading}
               onChange={handleAvatarChange}

@@ -886,14 +886,13 @@ export default function DigitalCityHub({
                       >
                         <Video className="w-4 h-4" />
                         <span>
-                          {gatherMediaUploading === 'video' ? `Uploading… ${gatherMediaProgress}%` : gatherPostYoutube ? 'Video attached ✓' : 'Add a video / camera (max 50MB)'}
+                          {gatherMediaUploading === 'video' ? `Uploading… ${gatherMediaProgress}%` : gatherPostYoutube ? 'Video attached ✓' : 'Add a video (max 50MB)'}
                         </span>
                       </label>
                       <input
                         id="gather-video-upload"
                         type="file"
                         accept="video/*"
-                        capture="environment"
                         className="hidden"
                         disabled={!!gatherMediaUploading}
                         onChange={(e) => handleGatherMediaUpload(e, 'video')}
@@ -926,13 +925,12 @@ export default function DigitalCityHub({
                             className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-sm"
                           >
                             <ImageIcon className="w-4 h-4" />
-                            <span>{gatherMediaUploading === 'image' ? `Uploading… ${gatherMediaProgress}%` : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo / camera'}</span>
+                            <span>{gatherMediaUploading === 'image' ? `Uploading… ${gatherMediaProgress}%` : gatherPostPhoto ? 'Photo attached ✓' : 'Add a photo'}</span>
                           </label>
                           <input
                             id="gather-photo-upload"
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             className="hidden"
                             disabled={!!gatherMediaUploading}
                             onChange={(e) => handleGatherMediaUpload(e, 'photo')}
@@ -1245,13 +1243,12 @@ export default function DigitalCityHub({
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <ImageIcon className="w-4 h-4" />
-                              <span>{mediaUploading === 'image' ? `Uploading… ${mediaUploadProgress}%` : postImage ? 'Photo attached ✓' : 'Photo / camera'}</span>
+                              <span>{mediaUploading === 'image' ? `Uploading… ${mediaUploadProgress}%` : postImage ? 'Photo attached ✓' : 'Add a photo'}</span>
                             </label>
                             <input
                               id="digital-city-photo-upload"
                               type="file"
                               accept="image/*"
-                              capture="environment"
                               className="hidden"
                               disabled={!!mediaUploading}
                               onChange={(e) => handleMediaUpload(e, 'photo')}
@@ -1263,13 +1260,12 @@ export default function DigitalCityHub({
                               className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-700 rounded-lg cursor-pointer hover:border-brand-gold text-slate-400 hover:text-brand-gold transition-colors text-xs"
                             >
                               <Video className="w-4 h-4" />
-                              <span>{mediaUploading === 'video' ? `Uploading… ${mediaUploadProgress}%` : postVideo ? 'Video attached ✓' : 'Video / camera'}</span>
+                              <span>{mediaUploading === 'video' ? `Uploading… ${mediaUploadProgress}%` : postVideo ? 'Video attached ✓' : 'Add a video (max 50MB)'}</span>
                             </label>
                             <input
                               id="digital-city-video-upload"
                               type="file"
                               accept="video/*"
-                              capture="environment"
                               className="hidden"
                               disabled={!!mediaUploading}
                               onChange={(e) => handleMediaUpload(e, 'video')}
