@@ -13,6 +13,7 @@ import GroupsView from './components/GroupsView';
 import GroupDetailView from './components/GroupDetailView';
 import MusicView from './components/MusicView';
 import PodcastView from './components/PodcastView';
+import InstallPrompt from './components/InstallPrompt';
 import AuthScreen from './components/Auth/AuthScreen';
 
 import { UserRole, Course, BlogPost, PrayerPoint, JournalEntry, Message, CommunityPost, LiveSession } from './types';
@@ -271,8 +272,6 @@ export default function App() {
         category: newPost.category,
         excerpt: newPost.excerpt,
         content: newPost.content,
-        authorName: newPost.author,
-        authorRole: newPost.authorRole,
         readTime: newPost.readTime,
         imageUrl: newPost.imageUrl,
         featured: newPost.featured,
@@ -512,6 +511,7 @@ export default function App() {
               (currentTab === 'admin-dashboard' && currentRole === 'Admin')) && (
               <CounselorAdminDashboard
                 currentRole={currentRole as 'Counselor' | 'Admin'}
+                profile={derivedProfile!}
                 courses={allCourses}
                 onAddCourse={handleAddCourse}
                 blogPosts={blogPosts}
@@ -524,6 +524,8 @@ export default function App() {
         )}
 
       </main>
+
+      <InstallPrompt />
 
     </div>
   );

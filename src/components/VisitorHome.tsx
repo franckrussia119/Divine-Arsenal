@@ -29,6 +29,14 @@ export default function VisitorHome({
     'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=1600',
   ];
   const [heroSlide, setHeroSlide] = useState(0);
+  const [publicStats, setPublicStats] = useState<{ totalUsers: number; totalAnsweredPrayers: number; totalCourses: number } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats/public')
+      .then((r) => r.json())
+      .then(setPublicStats)
+      .catch(() => setPublicStats(null));
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -127,19 +135,25 @@ export default function VisitorHome({
           <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
-                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">15,000+</div>
+                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">
+                  {publicStats ? `${publicStats.totalUsers}+` : '—'}
+                </div>
                 <div className="text-xs text-slate-300 uppercase tracking-widest font-mono mt-1">
                   {lang === 'fr' ? 'Croyants Inscrits' : 'Believers Enrolled'}
                 </div>
               </div>
               <div>
-                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">4.9/5</div>
+                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">
+                  {publicStats ? publicStats.totalCourses : '—'}
+                </div>
                 <div className="text-xs text-slate-300 uppercase tracking-widest font-mono mt-1">
-                  {lang === 'fr' ? 'Satisfaction des Cours' : 'Course Satisfaction'}
+                  {lang === 'fr' ? 'Cours Disponibles' : 'Courses Available'}
                 </div>
               </div>
               <div>
-                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">120+</div>
+                <div className="font-serif text-3xl sm:text-4xl text-brand-gold font-bold">
+                  {publicStats ? publicStats.totalAnsweredPrayers : '—'}
+                </div>
                 <div className="text-xs text-slate-300 uppercase tracking-widest font-mono mt-1">
                   {lang === 'fr' ? "Témoignages d'Exaucement" : 'Answered Testimonies'}
                 </div>

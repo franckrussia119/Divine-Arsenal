@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Course, BlogPost, PrayerPoint } from '../types';
+import { Course, BlogPost, PrayerPoint, UserProfile } from '../types';
 import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3, Video } from 'lucide-react';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/uploadWithProgress';
@@ -28,6 +28,7 @@ interface AdminStudent {
 
 interface CounselorAdminDashboardProps {
   currentRole: 'Counselor' | 'Admin';
+  profile: UserProfile;
   courses: Course[];
   onAddCourse: (newCourse: Course) => void;
   blogPosts: BlogPost[];
@@ -38,6 +39,7 @@ interface CounselorAdminDashboardProps {
 
 export default function CounselorAdminDashboard({
   currentRole,
+  profile,
   courses,
   onAddCourse,
   blogPosts,
@@ -212,9 +214,9 @@ export default function CounselorAdminDashboard({
       category: postCategory,
       excerpt: postExcerpt || 'Explore the deep spiritual mechanics of prayer and faith.',
       content: postContent,
-      author: 'Pastor Joel Adeleke',
-      authorRole: 'Founder, AG Network',
-      date: 'Jul 5, 2026',
+      author: profile.name,
+      authorRole: profile.role === 'Admin' ? 'Admin' : 'Counselor',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       readTime: '5 min read',
       imageUrl: postImg
     };

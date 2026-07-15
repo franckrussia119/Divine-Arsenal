@@ -22,7 +22,7 @@ Telegram notification whenever someone signs up).
 - **Real in-app notifications** — the bell icon shows real, live activity (comments, likes, prayer agreements, counselor replies, new courses/teachings/music/podcasts, live sessions, being added to a group), polling every 30 seconds.
 - **Groups** — anyone can create a group; others browse and join it Reddit-style. Group admins can add members directly by email, remove members, and each group has its own post feed.
 - **Admin analytics** — total users, students, counselors, enrollments, per-course enrollment/progress, and a full list of students with what they're enrolled in.
-- **Installable as a mobile app (PWA)** — a manifest, app icons generated from your logo, and a service worker mean visitors get "Add to Home Screen" / "Install App" on Android and iOS.
+- **Installable as a mobile app (PWA)** — a manifest, app icons generated from your logo, and a service worker mean visitors get "Add to Home Screen" / "Install App" on Android and iOS. A custom install banner now actively prompts first-time visitors to install it (shown once per device).
 - **Working mobile navigation** — the nav previously had no mobile fallback at all; there's now a proper hamburger menu.
 - **Facebook/Instagram-style visitor experience** — the homepage leads with real published teachings right after the hero (not buried under marketing sections), and an unauthenticated visitor gets prompted to sign up after ~4 minutes of browsing.
 - **English / French** — a language switcher in the header; the mechanism (`src/translations.tsx`) covers navigation, auth, groups, and admin screens. Some older screens still have English-only strings — extending coverage there is a good next task, the pattern is already in place.
@@ -33,6 +33,13 @@ Telegram notification whenever someone signs up).
 - No real-time "who's online" presence tracking (would need WebSockets).
 - No password-reset email flow yet.
 - Notifications are in-app only (polling) — no push notifications to the phone's lock screen yet; that would need a separate VAPID/push-subscription setup.
+
+### About OTP emails only working "the first time"
+This is a known Resend limitation, not a bug in the app. The free `onboarding@resend.dev` sender can **only deliver to the email address your Resend account itself is registered with** — every other recipient gets silently rejected. That's exactly why it worked once (probably when you tested with your own email) and then stopped (real users' emails aren't yours).
+
+**The fix:** verify a real domain in Resend (Resend dashboard → Domains → Add Domain, then add the DNS records it gives you at your domain registrar — takes a few minutes to propagate). Once verified, set `RESEND_FROM_EMAIL` to an address on that domain (e.g. `noreply@yourchurch.org`) and it'll deliver to anyone.
+
+**In the meantime**, every OTP code is now also printed to the server logs (Coolify → your app → Logs), so you can retrieve a code manually if an email doesn't arrive while you're setting up the domain.
 
 ### About the notifications
 If the bell icon still isn't showing anything after this update, the most likely cause is the same one we've hit before: **the deployed app is running code from before this change.** Notifications need a brand-new database table (`Notification`) that only gets created when the container restarts with this updated `prisma/schema.prisma` — so push to GitHub and redeploy, the same way as always, and it should start working. If it's still empty after that, remember notifications only appear once something actually happens (someone comments/likes/prays on your post, a course is published, etc.) — a freshly seeded database won't have any yet.

@@ -436,18 +436,10 @@ export default function DigitalCityHub({
                       </span>
                     </div>
 
-                    {/* Member Cell 1 */}
-                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col items-center justify-center p-3 text-center">
-                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" className="w-10 h-10 rounded-full mb-1" />
-                      <span className="text-[9px] font-medium text-slate-300">Sister Chioma</span>
-                      <span className="text-[7px] text-slate-500 font-mono">Mute • London</span>
-                    </div>
-
-                    {/* Member Cell 2 */}
-                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col items-center justify-center p-3 text-center">
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" className="w-10 h-10 rounded-full mb-1" />
-                      <span className="text-[9px] font-medium text-slate-300">Brother Amos</span>
-                      <span className="text-[7px] text-slate-500 font-mono">Mute • Lagos</span>
+                    {/* Other participants would appear here once real video is wired up */}
+                    <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center p-3 text-center">
+                      <Users className="w-5 h-5 text-slate-600 mb-1" />
+                      <span className="text-[8px] text-slate-500 font-mono">Waiting for others…</span>
                     </div>
 
                     {/* YOUR CELL (Shows if video active) */}

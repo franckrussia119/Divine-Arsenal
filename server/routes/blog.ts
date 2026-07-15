@@ -27,8 +27,10 @@ router.get('/', async (_req, res) => {
 });
 
 router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: AuthedRequest, res) => {
-  const { title, category, excerpt, content, authorName, authorRole, readTime, imageUrl, featured } = req.body ?? {};
+  const { title, category, excerpt, content, readTime, imageUrl, featured } = req.body ?? {};
   if (!title || !content) return res.status(400).json({ error: 'Title and content are required' });
+
+  const author = await prisma.user.findUnique({ where: { id: req.userId } });
 
   const post = await prisma.blogPost.create({
     data: {
@@ -37,8 +39,8 @@ router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: Aut
       excerpt: excerpt ?? '',
       content,
       authorId: req.userId,
-      authorName: authorName ?? '',
-      authorRole: authorRole ?? '',
+      authorName: author?.name ?? '',
+      authorRole: author?.role ?? '',
       readTime: readTime ?? '',
       imageUrl: imageUrl ?? '',
       featured: featured ?? false,

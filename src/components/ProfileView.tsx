@@ -402,24 +402,16 @@ export default function ProfileView({
                   "Study to show thyself approved unto God, a workman that needeth not to be ashamed, rightly dividing the word of truth." — 2 Timothy 2:15
                 </p>
 
-                {/* Simulated signature row */}
-                <div className="grid grid-cols-2 gap-8 pt-10 max-w-2xl mx-auto border-t border-slate-100">
-                  <div className="text-center">
-                    <span className="font-serif italic text-sm text-brand-blue-950 block">Joel Adeleke</span>
-                    <span className="w-32 h-px bg-slate-300 block mx-auto my-1"></span>
-                    <span className="text-[9px] text-slate-400 font-mono uppercase">Pastor Joel Adeleke • AG Founder</span>
-                  </div>
-                  
-                  <div className="text-center">
-                    <span className="font-serif italic text-sm text-brand-blue-950 block">Sarah Nkosi</span>
-                    <span className="w-32 h-px bg-slate-300 block mx-auto my-1"></span>
-                    <span className="text-[9px] text-slate-400 font-mono uppercase">Sarah Nkosi • Lead Counsel</span>
-                  </div>
+                {/* Official seal */}
+                <div className="pt-10 max-w-md mx-auto border-t border-slate-100 text-center">
+                  <span className="font-serif italic text-sm text-brand-blue-950 block">Divine Arsenal Corporation</span>
+                  <span className="w-40 h-px bg-slate-300 block mx-auto my-1"></span>
+                  <span className="text-[9px] text-slate-400 font-mono uppercase">Official Certification</span>
                 </div>
 
                 <div className="pt-8 flex flex-col sm:flex-row justify-center items-center gap-3">
                   <span className="text-[9px] text-slate-400 font-mono uppercase bg-slate-100 px-3 py-1 rounded">
-                    CREDENTIAL HASH: DA-{selectedCertCourse.id.toUpperCase()}-777
+                    CREDENTIAL ID: DA-{selectedCertCourse.id.slice(-8).toUpperCase()}
                   </span>
                   
                   <button
