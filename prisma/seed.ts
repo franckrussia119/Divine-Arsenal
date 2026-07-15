@@ -6,6 +6,18 @@ const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = 'Password123!';
 
+async function generateUsername(fullName: string): Promise<string> {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const surname = parts[parts.length - 1] || 'Member';
+  const base = surname.replace(/[^a-zA-Z0-9]/g, '') || 'Member';
+  for (let n = 1; n <= 999; n++) {
+    const candidate = `${base}-divine${String(n).padStart(2, '0')}`;
+    const existing = await prisma.user.findUnique({ where: { username: candidate } });
+    if (!existing) return candidate;
+  }
+  return `${base}-divine-${Date.now()}`;
+}
+
 async function upsertUser(data: {
   name: string;
   email: string;
@@ -20,10 +32,10 @@ async function upsertUser(data: {
   renewsDate?: string;
 }) {
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
-  return prisma.user.upsert({
-    where: { email: data.email },
-    update: {},
-    create: { ...data, password: passwordHash, emailVerified: true },
+  const existing = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existing) return existing;
+  return prisma.user.create({
+    data: { ...data, username: await generateUsername(data.name), password: passwordHash, emailVerified: true },
   });
 }
 

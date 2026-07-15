@@ -23,6 +23,7 @@ function toProfile(u: any): UserProfile {
   return {
     id: u.id,
     name: u.name,
+    username: u.username ?? undefined,
     email: u.email,
     phone: u.phone ?? '',
     whatsapp: u.whatsapp ?? '',

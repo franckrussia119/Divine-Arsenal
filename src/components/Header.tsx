@@ -24,6 +24,7 @@ export default function Header({
   const { lang, setLang, t } = useTranslation();
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const mobileNavItems: { label: string; tab: string }[] =
     currentRole === 'Visitor'
@@ -490,7 +491,7 @@ export default function Header({
                   />
                 </div>
                 <button
-                  onClick={onLogout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="p-2 text-gray-400 hover:text-white hover:bg-brand-blue-900/40 rounded-full transition-colors duration-200"
                   title="Sign Out"
                 >
@@ -534,13 +535,39 @@ export default function Header({
               </button>
             ) : (
               <button
-                onClick={() => { onLogout(); setShowMobileMenu(false); }}
+                onClick={() => { setShowMobileMenu(false); setShowLogoutConfirm(true); }}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-brand-blue-900/40 text-gray-300 font-semibold text-xs uppercase tracking-wider"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
               </button>
             )}
+          </div>
+        </div>
+      )}
+      {/* Sign-out confirmation */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+              <LogOut className="w-5 h-5 text-red-500" />
+            </div>
+            <h3 className="font-serif text-lg font-bold text-brand-blue-950 mb-2">Sign out?</h3>
+            <p className="text-sm text-slate-500 mb-6">Are you sure you want to sign out of Divine Arsenal?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
+              >
+                Yes, sign out
+              </button>
+            </div>
           </div>
         </div>
       )}

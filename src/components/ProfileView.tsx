@@ -107,6 +107,9 @@ export default function ProfileView({
               <span>{profile.plan} Member</span>
             </div>
             <h1 className="font-serif text-3xl font-bold">{profile.name}</h1>
+            {profile.username && (
+              <p className="text-xs text-brand-gold font-mono mt-0.5">@{profile.username}</p>
+            )}
             <p className="text-xs text-slate-300 mt-1 max-w-lg leading-relaxed">
               {profile.bio || "No spiritual bio added yet. Click 'Edit profile' to share your covenant objectives."}
             </p>

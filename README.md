@@ -9,7 +9,8 @@ Telegram notification whenever someone signs up).
 ## What's in this version
 
 - **Real database** (Postgres + Prisma) — nothing lives only in the browser.
-- **Real accounts with email verification** — sign up sends a 6-digit code by email (via Resend); the account only activates once verified. **Choose English or French right at signup** — the app switches to that language immediately and again automatically every time that person logs in.
+- **Real accounts with email verification** — sign up sends a 6-digit code by email (via Gmail SMTP or Resend — your choice, see below); the account only activates once verified. Signup now requires **confirming your password** (typed twice, must match) and every account gets an **auto-generated handle** like `Okafor-divine01` (surname + "-divine" + a number, incrementing automatically if that handle's taken). **Choose English or French right at signup** — the app switches to that language immediately and again automatically every time that person logs in.
+- **Sign-out now asks for confirmation** ("Are you sure you want to sign out?") before actually logging you out, on both desktop and mobile.
 - **WhatsApp number collected at signup**, and a **Telegram bot** pings you the moment a new (verified) user joins.
 - **Role-gated signup** — self-signup is always a Student account. Only an existing Admin can create Counselor or Admin accounts (Admin dashboard → "Create Counselor / Admin Account").
 - **Profile picture upload**, with a **real upload progress percentage** shown live (this applies to every upload in the app: avatar, course videos, music/podcast audio, and Zion Digital City photos/videos/audio).
@@ -34,12 +35,21 @@ Telegram notification whenever someone signs up).
 - No password-reset email flow yet.
 - Notifications are in-app only (polling) — no push notifications to the phone's lock screen yet; that would need a separate VAPID/push-subscription setup.
 
-### About OTP emails only working "the first time"
-This is a known Resend limitation, not a bug in the app. The free `onboarding@resend.dev` sender can **only deliver to the email address your Resend account itself is registered with** — every other recipient gets silently rejected. That's exactly why it worked once (probably when you tested with your own email) and then stopped (real users' emails aren't yours).
+### Email setup — two options
+You now have a choice of email provider, controlled entirely by which environment variables you set. **If `SMTP_USER`/`SMTP_PASS` are set, that's used — Resend is only a fallback.**
 
-**The fix:** verify a real domain in Resend (Resend dashboard → Domains → Add Domain, then add the DNS records it gives you at your domain registrar — takes a few minutes to propagate). Once verified, set `RESEND_FROM_EMAIL` to an address on that domain (e.g. `noreply@yourchurch.org`) and it'll deliver to anyone.
+**Option A — Gmail SMTP (recommended, works immediately, no domain needed):**
+1. Use any Gmail account.
+2. Turn on 2-Step Verification on that Google account (Google requires this for the next step).
+3. Go to https://myaccount.google.com/apppasswords, create an app password, copy the 16-character code it gives you.
+4. Set `SMTP_USER` to that Gmail address and `SMTP_PASS` to the 16-character app password (not your normal Gmail password).
+5. Redeploy. This works for every recipient immediately — no domain, no DNS, no verification wait.
 
-**In the meantime**, every OTP code is now also printed to the server logs (Coolify → your app → Logs), so you can retrieve a code manually if an email doesn't arrive while you're setting up the domain.
+**Option B — Resend:** requires a verified domain (Resend dashboard → Domains) before it can deliver to anyone other than your own Resend account's email. See `.env.example` for the exact variables.
+
+**Either way**, every OTP code is also printed to your server logs (Coolify → your app → Logs) as a fallback — search for `[email] OTP for`.
+
+If email still isn't arriving after switching to SMTP, check Coolify's logs right after a signup attempt — you'll see either a successful send or a specific SMTP error (e.g. "Invalid login" usually means the app password was typed wrong or 2-Step Verification isn't actually on).
 
 ### About the notifications
 If the bell icon still isn't showing anything after this update, the most likely cause is the same one we've hit before: **the deployed app is running code from before this change.** Notifications need a brand-new database table (`Notification`) that only gets created when the container restarts with this updated `prisma/schema.prisma` — so push to GitHub and redeploy, the same way as always, and it should start working. If it's still empty after that, remember notifications only appear once something actually happens (someone comments/likes/prays on your post, a course is published, etc.) — a freshly seeded database won't have any yet.

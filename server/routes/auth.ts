@@ -17,6 +17,22 @@ function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
 }
 
+// Turns "Yonel Okafor" into a unique handle like "Okafor-divine01",
+// incrementing the number if that handle is already taken.
+async function generateUsername(fullName: string): Promise<string> {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const surname = parts[parts.length - 1] || 'Member';
+  const base = surname.replace(/[^a-zA-Z0-9]/g, '') || 'Member';
+
+  for (let n = 1; n <= 999; n++) {
+    const candidate = `${base}-divine${String(n).padStart(2, '0')}`;
+    const existing = await prisma.user.findUnique({ where: { username: candidate } });
+    if (!existing) return candidate;
+  }
+  // Astronomically unlikely fallback if 999 collisions somehow happen.
+  return `${base}-divine-${Date.now()}`;
+}
+
 // --- Sign up: creates an unverified account and emails a 6-digit code ---
 router.post('/signup', async (req, res) => {
   try {
@@ -51,6 +67,7 @@ router.post('/signup', async (req, res) => {
       : await prisma.user.create({
           data: {
             name,
+            username: await generateUsername(name),
             email: email.toLowerCase(),
             password: passwordHash,
             whatsapp,
@@ -184,6 +201,7 @@ router.post('/create-staff', requireAuth, requireRole('Admin'), async (req: Auth
     const user = await prisma.user.create({
       data: {
         name,
+        username: await generateUsername(name),
         email: email.toLowerCase(),
         password: passwordHash,
         role,

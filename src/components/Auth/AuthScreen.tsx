@@ -18,6 +18,7 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [homeChurch, setHomeChurch] = useState('');
   const [signupLanguage, setSignupLanguage] = useState<'en' | 'fr'>('en');
@@ -25,6 +26,7 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === 'signup' && password !== confirmPassword) return; // guarded by disabled button too
     setSubmitting(true);
     setNotice(null);
     try {
@@ -196,6 +198,31 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
             </div>
 
             {mode === 'signup' && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Confirm password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/50 ${
+                      confirmPassword && confirmPassword !== password
+                        ? 'border-red-300 focus:border-red-400'
+                        : 'border-slate-300 focus:border-brand-gold'
+                    }`}
+                    placeholder="Re-enter your password"
+                  />
+                </div>
+                {confirmPassword && confirmPassword !== password && (
+                  <p className="text-[11px] text-red-500 mt-1">Passwords don't match.</p>
+                )}
+              </div>
+            )}
+
+            {mode === 'signup' && (
               <>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Language / Langue</label>
@@ -264,7 +291,7 @@ export default function AuthScreen({ onDone, onBack }: AuthScreenProps) {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (mode === 'signup' && password !== confirmPassword)}
               className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-brand-gold text-brand-blue-950 font-semibold text-sm tracking-wide uppercase shadow-lg shadow-brand-gold/10 hover:bg-brand-gold-light hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none"
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
