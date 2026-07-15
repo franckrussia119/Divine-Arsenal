@@ -30,7 +30,7 @@ export default function MyCourses({
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="my-courses-page">
       
       {/* 1. Header Banner */}
-      <div className="bg-brand-blue-950 text-white py-10 border-b border-brand-gold/20">
+      <div className="bg-brand-blue-950 text-white py-7 sm:py-10 border-b border-brand-gold/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-bold text-white">Spiritual Training Academy</h1>

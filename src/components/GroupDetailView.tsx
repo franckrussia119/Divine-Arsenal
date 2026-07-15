@@ -106,7 +106,7 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16">
-      <div className="bg-brand-blue-950 text-white py-10 border-b border-brand-gold/20">
+      <div className="bg-brand-blue-950 text-white py-7 sm:py-10 border-b border-brand-gold/20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <button onClick={onBack} className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white mb-4">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -155,7 +155,7 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
           )}
 
           {posts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+            <div className="text-center py-12 sm:py-16 bg-white rounded-2xl border border-slate-200">
               <p className="text-sm text-slate-500">No posts in this group yet.</p>
             </div>
           ) : (

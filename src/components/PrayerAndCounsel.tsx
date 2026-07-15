@@ -86,7 +86,7 @@ export default function PrayerAndCounsel({
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="prayer-and-care-page">
       
       {/* 1. Header Hero Banner */}
-      <div className="bg-brand-blue-950 text-white py-12 border-b border-brand-gold/20 relative overflow-hidden">
+      <div className="bg-brand-blue-950 text-white py-8 sm:py-12 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <span className="text-[10px] text-brand-gold font-mono uppercase tracking-widest font-bold">
@@ -98,11 +98,11 @@ export default function PrayerAndCounsel({
           </p>
 
           {/* Sub Navigation Tabs */}
-          <div className="flex justify-center mt-10" id="care-layer-tabs">
-            <div className="inline-flex bg-brand-blue-900/60 p-1 rounded-xl border border-white/10">
+          <div className="flex justify-start sm:justify-center mt-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0" id="care-layer-tabs">
+            <div className="inline-flex bg-brand-blue-900/60 p-1 rounded-xl border border-white/10 shrink-0">
               <button
                 onClick={() => setActiveCareTab('war')}
-                className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer ${
+                className={`shrink-0 px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeCareTab === 'war' ? 'bg-brand-gold text-brand-blue-950 font-bold' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -112,7 +112,7 @@ export default function PrayerAndCounsel({
               
               <button
                 onClick={() => setActiveCareTab('journal')}
-                className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer ${
+                className={`shrink-0 px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeCareTab === 'journal' ? 'bg-brand-gold text-brand-blue-950 font-bold' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -122,7 +122,7 @@ export default function PrayerAndCounsel({
 
               <button
                 onClick={() => setActiveCareTab('counsel')}
-                className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer ${
+                className={`shrink-0 px-4 sm:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center space-x-2 transition-all cursor-pointer whitespace-nowrap ${
                   activeCareTab === 'counsel' ? 'bg-brand-gold text-brand-blue-950 font-bold' : 'text-slate-300 hover:text-white'
                 }`}
               >

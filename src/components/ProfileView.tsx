@@ -105,7 +105,7 @@ export default function ProfileView({
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="student-profile-page">
       
       {/* 1. Header Hero Banner */}
-      <div className="bg-brand-blue-950 text-white py-12 border-b border-brand-gold/20 relative overflow-hidden">
+      <div className="bg-brand-blue-950 text-white py-8 sm:py-12 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div className="w-24 h-24 rounded-full border-2 border-brand-gold p-1 shrink-0 relative group">
@@ -162,7 +162,7 @@ export default function ProfileView({
             
             {/* Edit Profile Form */}
             {isEditing ? (
-              <form onSubmit={handleProfileSave} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <form onSubmit={handleProfileSave} className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4">Edit Covenant Credentials</h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -236,7 +236,7 @@ export default function ProfileView({
               </form>
             ) : (
               /* Informational View */
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+              <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                 <h3 className="font-serif font-bold text-brand-blue-950 text-lg">Covenant Credentials</h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -276,7 +276,7 @@ export default function ProfileView({
             )}
 
             {/* Completion Certificates Column */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4">My Completion Certificates</h3>
               
               {completedCourses.length === 0 ? (
@@ -320,7 +320,7 @@ export default function ProfileView({
           <div className="space-y-8">
             
             {/* Membership details */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4">Membership Plan</h3>
               
               <div className="p-4 bg-brand-blue-950 text-white rounded-xl border border-brand-gold/20 relative overflow-hidden">
@@ -356,7 +356,7 @@ export default function ProfileView({
             </div>
 
             {/* Notifications settings */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-1">Notifications</h3>
               <p className="text-xs text-slate-500 mb-4">
                 Get real alerts on this device — comments, likes, replies, new courses, and more.
@@ -381,7 +381,7 @@ export default function ProfileView({
             </div>
 
             {/* Streak milestones widget */}
-            <div className="bg-brand-blue-950 text-white p-6 rounded-2xl border border-brand-gold/20 relative overflow-hidden">
+            <div className="bg-brand-blue-950 text-white p-4 sm:p-6 rounded-2xl border border-brand-gold/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-xl"></div>
               
               <h3 className="font-serif font-bold text-brand-gold text-base mb-4 flex items-center">

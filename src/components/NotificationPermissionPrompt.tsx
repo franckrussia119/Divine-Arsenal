@@ -32,7 +32,7 @@ export default function NotificationPermissionPrompt() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-[9997] animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:w-96 z-[9997] animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl p-5 relative">
         <button onClick={dismiss} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
           <X className="w-4 h-4" />

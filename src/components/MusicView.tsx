@@ -89,7 +89,7 @@ export default function MusicView({ profile }: MusicViewProps) {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16">
-      <div className="bg-brand-blue-950 text-white py-10 border-b border-brand-gold/20">
+      <div className="bg-brand-blue-950 text-white py-7 sm:py-10 border-b border-brand-gold/20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center space-x-2 text-xs text-brand-gold font-mono uppercase tracking-widest mb-1">
@@ -184,7 +184,7 @@ export default function MusicView({ profile }: MusicViewProps) {
         {loading ? (
           <p className="text-sm text-slate-400">Loading…</p>
         ) : grouped.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+          <div className="text-center py-12 sm:py-16 bg-white rounded-2xl border border-slate-200">
             <Music className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500">No music yet.</p>
           </div>

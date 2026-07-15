@@ -58,7 +58,7 @@ export default function InstallPrompt() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[9998] animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[9998] animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="bg-brand-blue-950 border border-brand-gold/30 rounded-2xl shadow-2xl p-5 text-white relative">
         <button onClick={dismiss} className="absolute top-3 right-3 text-slate-400 hover:text-white">
           <X className="w-4 h-4" />

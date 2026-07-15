@@ -57,7 +57,7 @@ export default function VisitorHome({
     <div className="bg-slate-50 min-h-screen text-slate-800" id="visitor-home-page">
       
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-brand-blue-950 text-white py-20 lg:py-32 border-b border-brand-gold/30">
+      <section className="relative overflow-hidden bg-brand-blue-950 text-white py-12 sm:py-20 lg:py-32 border-b border-brand-gold/30">
         {/* Sliding background photos */}
         <div className="absolute inset-0">
           {heroBackgrounds.map((src, i) => (
@@ -170,7 +170,7 @@ export default function VisitorHome({
       </section>
 
       {/* Direct feed of teachings, moved up so visitors see real content immediately */}
-      <section className="py-20 bg-white" id="teachings-section">
+      <section className="py-12 sm:py-20 bg-white" id="teachings-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -282,7 +282,7 @@ export default function VisitorHome({
       </section>
 
       {/* 3. Core Modules Value Pitch (The 3 Pillars) */}
-      <section className="py-20 bg-white" id="three-pillars-section">
+      <section className="py-12 sm:py-20 bg-white" id="three-pillars-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="font-serif text-3xl sm:text-4xl text-brand-blue-950 font-bold mb-4">
@@ -348,7 +348,7 @@ export default function VisitorHome({
       </section>
 
       {/* 4. Interactive Courses Preview */}
-      <section className="py-20 bg-slate-100" id="courses-section">
+      <section className="py-12 sm:py-20 bg-slate-100" id="courses-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
             <div>
@@ -440,7 +440,7 @@ export default function VisitorHome({
       {/* 5. Living Teachings (Blog Section) */}
 
       {/* 6. Dynamic Prayer Wall Peek */}
-      <section className="py-20 bg-slate-50 border-t border-slate-200">
+      <section className="py-12 sm:py-20 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
             

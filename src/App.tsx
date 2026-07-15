@@ -392,7 +392,7 @@ export default function App() {
         }}
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow pb-16 md:pb-0">
 
         {showAuth || needsAuthGate ? (
           <AuthScreen

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe, Menu, X } from 'lucide-react';
+import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe, Menu, X, Home, Users, Music, Mic, GraduationCap, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useTranslation } from '../translations';
 import { api } from '../lib/api';
@@ -23,42 +23,44 @@ export default function Header({
 }: HeaderProps) {
   const { lang, setLang, t } = useTranslation();
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const mobileNavItems: { label: string; tab: string }[] =
+  const mobileNavItems: { label: string; tab: string; icon: React.ComponentType<{ className?: string }> }[] =
     currentRole === 'Visitor'
       ? [
-          { label: t('home'), tab: 'visitor-home' },
-          { label: t('digitalCity'), tab: 'community-city' },
-          { label: t('teachings'), tab: 'blog' },
+          { label: t('home'), tab: 'visitor-home', icon: Home },
+          { label: t('digitalCity'), tab: 'community-city', icon: Globe },
+          { label: t('teachings'), tab: 'blog', icon: BookOpen },
         ]
       : currentRole === 'Student'
       ? [
-          { label: t('dashboard'), tab: 'dashboard' },
-          { label: t('digitalCity'), tab: 'community-city' },
-          { label: t('groups'), tab: 'groups' },
-          { label: t('myCourses'), tab: 'my-courses' },
-          { label: t('warRoom'), tab: 'war-room' },
-          { label: t('teachings'), tab: 'blog' },
-          { label: t('music'), tab: 'music' },
-          { label: t('podcast'), tab: 'podcast' },
-          { label: t('profile'), tab: 'profile' },
+          { label: t('dashboard'), tab: 'dashboard', icon: LayoutDashboard },
+          { label: t('digitalCity'), tab: 'community-city', icon: Globe },
+          { label: t('myCourses'), tab: 'my-courses', icon: GraduationCap },
+          { label: t('profile'), tab: 'profile', icon: UserIcon },
+          { label: t('groups'), tab: 'groups', icon: Users },
+          { label: t('warRoom'), tab: 'war-room', icon: Shield },
+          { label: t('teachings'), tab: 'blog', icon: BookOpen },
+          { label: t('music'), tab: 'music', icon: Music },
+          { label: t('podcast'), tab: 'podcast', icon: Mic },
         ]
       : currentRole === 'Counselor'
       ? [
-          { label: t('carePortal'), tab: 'counselor-dashboard' },
-          { label: t('digitalCity'), tab: 'community-city' },
-          { label: t('groups'), tab: 'groups' },
-          { label: t('music'), tab: 'music' },
-          { label: t('podcast'), tab: 'podcast' },
+          { label: t('carePortal'), tab: 'counselor-dashboard', icon: Compass },
+          { label: t('digitalCity'), tab: 'community-city', icon: Globe },
+          { label: t('groups'), tab: 'groups', icon: Users },
+          { label: t('profile'), tab: 'profile', icon: UserIcon },
+          { label: t('music'), tab: 'music', icon: Music },
+          { label: t('podcast'), tab: 'podcast', icon: Mic },
         ]
       : [
-          { label: t('adminConsole'), tab: 'admin-dashboard' },
-          { label: t('digitalCity'), tab: 'community-city' },
-          { label: t('groups'), tab: 'groups' },
-          { label: t('music'), tab: 'music' },
-          { label: t('podcast'), tab: 'podcast' },
+          { label: t('adminConsole'), tab: 'admin-dashboard', icon: ShieldAlert },
+          { label: t('digitalCity'), tab: 'community-city', icon: Globe },
+          { label: t('groups'), tab: 'groups', icon: Users },
+          { label: t('profile'), tab: 'profile', icon: UserIcon },
+          { label: t('music'), tab: 'music', icon: Music },
+          { label: t('podcast'), tab: 'podcast', icon: Mic },
         ];
 
   const [notifications, setNotifications] = useState<{ id: string; message: string; timeAgo: string; read: boolean; link?: string }[]>([]);
@@ -375,16 +377,6 @@ export default function Header({
           {/* Actions & Role Switcher */}
           <div className="flex items-center space-x-4">
 
-            {/* Mobile menu toggle */}
-            <button
-              onClick={() => setShowMobileMenu((s) => !s)}
-              className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-brand-blue-900/40 rounded-lg transition-colors"
-              aria-label="Toggle menu"
-              id="mobile-menu-toggle"
-            >
-              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            
             {/* Language Switcher */}
             <div className="flex items-center bg-brand-blue-900/60 rounded-full border border-brand-gold/30 p-0.5" id="language-switcher">
               <button
@@ -504,47 +496,97 @@ export default function Header({
 
         </div>
       </div>
-      {/* Mobile nav drawer */}
-      {showMobileMenu && (
-        <div className="md:hidden border-t border-brand-gold/20 bg-brand-blue-950 px-4 pb-4 pt-2 space-y-1" id="mobile-nav-drawer">
-          {mobileNavItems.map((item) => (
+      {/* Mobile bottom tab bar — replaces the old hamburger dropdown */}
+      <div
+        className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-brand-blue-950 border-t border-brand-gold/20"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        id="mobile-bottom-nav"
+      >
+        <div className="flex items-stretch">
+          {mobileNavItems.slice(0, 4).map((item) => {
+            const ItemIcon = item.icon;
+            const active = currentTab === item.tab;
+            return (
+              <button
+                key={item.tab}
+                onClick={() => { onChangeTab(item.tab); setShowMoreSheet(false); }}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
+                  active ? 'text-brand-gold' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <ItemIcon className="w-5 h-5" />
+                <span className="text-[9.5px] font-medium leading-none truncate max-w-[64px]">{item.label}</span>
+              </button>
+            );
+          })}
+
+          {!profile && (
             <button
-              key={item.tab}
-              onClick={() => {
-                onChangeTab(item.tab);
-                setShowMobileMenu(false);
-              }}
-              className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                currentTab === item.tab
-                  ? 'text-brand-gold bg-brand-blue-900/50'
-                  : 'text-gray-300 hover:text-white hover:bg-brand-blue-900/30'
+              onClick={onSignIn}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-brand-gold"
+            >
+              <LogIn className="w-5 h-5" />
+              <span className="text-[9.5px] font-medium leading-none">{t('signIn') ?? 'Sign In'}</span>
+            </button>
+          )}
+
+          {profile && mobileNavItems.length > 4 && (
+            <button
+              onClick={() => setShowMoreSheet((s) => !s)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
+                showMoreSheet ? 'text-brand-gold' : 'text-gray-400 hover:text-gray-200'
               }`}
             >
-              {item.label}
+              <Menu className="w-5 h-5" />
+              <span className="text-[9.5px] font-medium leading-none">More</span>
             </button>
-          ))}
+          )}
+        </div>
+      </div>
 
-          <div className="pt-2 mt-2 border-t border-brand-gold/10">
-            {!profile ? (
-              <button
-                onClick={() => { onSignIn(); setShowMobileMenu(false); }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-brand-gold text-brand-blue-950 font-semibold text-xs uppercase tracking-wider"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>{t('signIn') ?? 'Sign In'}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => { setShowMobileMenu(false); setShowLogoutConfirm(true); }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-brand-blue-900/40 text-gray-300 font-semibold text-xs uppercase tracking-wider"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            )}
+      {/* "More" sheet — the rest of the nav items that don't fit in the bottom bar */}
+      {showMoreSheet && (
+        <div
+          className="md:hidden fixed inset-0 z-[9998] bg-black/50 flex items-end"
+          onClick={() => setShowMoreSheet(false)}
+        >
+          <div
+            className="w-full bg-brand-blue-950 rounded-t-2xl border-t border-brand-gold/20 pt-4 px-4 pb-6"
+            style={{ marginBottom: 'calc(56px + env(safe-area-inset-bottom))' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4"></div>
+            <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+              {mobileNavItems.slice(4).map((item) => {
+                const ItemIcon = item.icon;
+                const active = currentTab === item.tab;
+                return (
+                  <button
+                    key={item.tab}
+                    onClick={() => { onChangeTab(item.tab); setShowMoreSheet(false); }}
+                    className="flex flex-col items-center gap-1.5"
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                      active ? 'bg-brand-gold text-brand-blue-950' : 'bg-white/5 text-gray-300'
+                    }`}>
+                      <ItemIcon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] text-gray-300 text-center leading-tight">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => { setShowMoreSheet(false); setShowLogoutConfirm(true); }}
+              className="w-full mt-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold uppercase tracking-wider flex items-center justify-center space-x-2 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
       )}
+
       {/* Sign-out confirmation */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">

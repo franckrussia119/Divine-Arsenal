@@ -60,7 +60,7 @@ export default function GroupsView({ onSelectGroup }: GroupsViewProps) {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="groups-view">
-      <div className="bg-brand-blue-950 text-white py-12 border-b border-brand-gold/20 relative overflow-hidden">
+      <div className="bg-brand-blue-950 text-white py-8 sm:py-12 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 blur-3xl rounded-full"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -115,7 +115,7 @@ export default function GroupsView({ onSelectGroup }: GroupsViewProps) {
         {loading ? (
           <p className="text-sm text-slate-400">Loading…</p>
         ) : groups.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+          <div className="text-center py-12 sm:py-16 bg-white rounded-2xl border border-slate-200">
             <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500">{t('noGroupsYet')}</p>
           </div>

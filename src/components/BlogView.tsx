@@ -40,7 +40,7 @@ export default function BlogView({
     <div className="bg-slate-50 min-h-screen text-slate-800 pb-16" id="blog-teachings-page">
       
       {/* 1. Header Hero Banner */}
-      <div className="bg-brand-blue-950 text-white py-12 border-b border-brand-gold/20 relative overflow-hidden">
+      <div className="bg-brand-blue-950 text-white py-8 sm:py-12 border-b border-brand-gold/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <span className="text-[10px] text-brand-gold font-mono uppercase tracking-widest font-bold">
