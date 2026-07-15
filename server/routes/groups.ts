@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, AuthedRequest } from '../middleware/auth.js';
 import { notifyUser } from '../lib/notifications.js';
+import { avatarOrDefault } from '../lib/avatar.js';
 
 const router = Router();
 
@@ -57,7 +58,7 @@ router.get('/:id', requireAuth, async (req: AuthedRequest, res) => {
     members: group.members.map((m) => ({
       userId: m.userId,
       name: m.user.name,
-      avatar: m.user.avatar,
+      avatar: avatarOrDefault(m.user.avatar),
       role: m.role,
       joinedAt: m.joinedAt,
     })),
@@ -122,7 +123,7 @@ router.post('/:id/members', requireAuth, async (req: AuthedRequest, res) => {
 
   res.status(201).json({
     group: shape(group, req.userId),
-    members: group.members.map((m) => ({ userId: m.userId, name: m.user.name, avatar: m.user.avatar, role: m.role, joinedAt: m.joinedAt })),
+    members: group.members.map((m) => ({ userId: m.userId, name: m.user.name, avatar: avatarOrDefault(m.user.avatar), role: m.role, joinedAt: m.joinedAt })),
   });
 });
 
@@ -151,7 +152,7 @@ router.delete('/:id/members/:userId', requireAuth, async (req: AuthedRequest, re
 
   res.json({
     group: shape(group, req.userId),
-    members: group.members.map((m) => ({ userId: m.userId, name: m.user.name, avatar: m.user.avatar, role: m.role, joinedAt: m.joinedAt })),
+    members: group.members.map((m) => ({ userId: m.userId, name: m.user.name, avatar: avatarOrDefault(m.user.avatar), role: m.role, joinedAt: m.joinedAt })),
   });
 });
 

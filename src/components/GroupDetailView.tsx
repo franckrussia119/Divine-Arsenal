@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Users, UserPlus, Heart, MessageSquare, Send, X, Trash2 } from 'lucide-react';
+import ZoomableImage from './ZoomableImage';
 import { Group, GroupMember, CommunityPost } from '../types';
 import { api } from '../lib/api';
 import { useTranslation } from '../translations';
@@ -179,7 +180,7 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
                   )}
                 </div>
                 <p className="text-sm text-slate-700 leading-relaxed">{p.content}</p>
-                {p.imageUrl && <img src={p.imageUrl} alt="" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
+                {p.imageUrl && <ZoomableImage src={p.imageUrl} alt="" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
                 {p.videoUrl && <video src={p.videoUrl} controls className="mt-3 rounded-lg max-h-80 w-full" />}
                 <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-slate-100">
                   <button

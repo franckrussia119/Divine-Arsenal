@@ -44,6 +44,7 @@ function shapeCatalogCourse(course: any) {
         keyVerseRef: l.keyVerseRef ?? undefined,
         practices: l.practices,
         content: l.content ?? undefined,
+        views: l.views ?? 0,
       })),
     })),
   };
@@ -68,6 +69,7 @@ function shapeEnrolledCourse(course: any, completedLessonIds: Set<string>, progr
         keyVerseRef: l.keyVerseRef ?? undefined,
         practices: l.practices,
         content: l.content ?? undefined,
+        views: l.views ?? 0,
       })),
     })),
   };
@@ -160,6 +162,19 @@ router.post('/:id/lessons/:lessonId/toggle', requireAuth, async (req: AuthedRequ
     course: shapeEnrolledCourse(course, new Set(completions.map((c) => c.lessonId)), updatedEnrollment.progress),
     wasCompleted: !existing,
   });
+});
+
+// Track a lesson video view (any signed-in user with access to the course).
+router.post('/:id/lessons/:lessonId/view', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const lesson = await prisma.lesson.update({
+      where: { id: req.params.lessonId },
+      data: { views: { increment: 1 } },
+    });
+    res.json({ views: lesson.views });
+  } catch {
+    res.status(404).json({ error: 'Lesson not found' });
+  }
 });
 
 // Admin/Counselor: create a new course with modules & lessons.

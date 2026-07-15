@@ -66,6 +66,7 @@ export interface Lesson {
   keyVerseRef?: string;
   practices?: string[];
   content?: string;
+  views?: number;
 }
 
 export interface CourseModule {
@@ -142,11 +143,16 @@ export interface Message {
 
 export interface CommunityComment {
   id: string;
+  authorId?: string;
   authorName: string;
   authorAvatar: string;
   authorRole: string;
   content: string;
   dateStr: string;
+  parentId?: string;
+  likes?: number;
+  isLiked?: boolean;
+  replies?: CommunityComment[];
 }
 
 export interface CommunityPost {
@@ -167,6 +173,7 @@ export interface CommunityPost {
   isLiked?: boolean;
   isAgreed?: boolean;
   groupId?: string;
+  views?: number;
 }
 
 export interface GroupMember {

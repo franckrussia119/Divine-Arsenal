@@ -324,12 +324,21 @@ export default function App() {
     }
   };
 
-  const handleAddCommunityComment = async (postId: string, text: string) => {
+  const handleAddCommunityComment = async (postId: string, text: string, parentId?: string) => {
     try {
-      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${postId}/comments`, { content: text });
+      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${postId}/comments`, { content: text, parentId });
       setCommunityPosts((prev) => prev.map((p) => (p.id === postId ? res.post : p)));
     } catch (err) {
       console.error('Add comment failed:', err);
+    }
+  };
+
+  const handleLikeComment = async (postId: string, commentId: string) => {
+    try {
+      const res = await api.post<{ post: CommunityPost }>(`/community/comments/${commentId}/like`);
+      setCommunityPosts((prev) => prev.map((p) => (p.id === postId ? res.post : p)));
+    } catch (err) {
+      console.error('Like comment failed:', err);
     }
   };
 
@@ -485,6 +494,7 @@ export default function App() {
                 onLikePost={handleLikeCommunityPost}
                 onAgreePost={handleAgreeCommunityPost}
                 onAddComment={handleAddCommunityComment}
+                onLikeComment={handleLikeComment}
                 onDeletePost={handleDeleteCommunityPost}
                 onOpenGroups={() => { setSelectedGroupId(null); setCurrentTab('groups'); }}
               />

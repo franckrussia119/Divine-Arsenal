@@ -10,6 +10,7 @@ import { useTranslation } from '../translations';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/uploadWithProgress';
 import ShareButton from './ShareButton';
+import ZoomableImage from './ZoomableImage';
 
 interface DigitalCityHubProps {
   profile: UserProfile;
@@ -18,7 +19,8 @@ interface DigitalCityHubProps {
   onCreatePost: (content: string, category: CommunityPost['category'], imageUrl?: string, videoUrl?: string, audioUrl?: string) => void;
   onLikePost: (id: string) => void;
   onAgreePost: (id: string) => void;
-  onAddComment: (postId: string, text: string) => void;
+  onAddComment: (postId: string, text: string, parentId?: string) => void;
+  onLikeComment: (postId: string, commentId: string) => void;
   onDeletePost: (id: string) => void;
   onOpenGroups: () => void;
 }
@@ -31,6 +33,7 @@ export default function DigitalCityHub({
   onLikePost,
   onAgreePost,
   onAddComment,
+  onLikeComment,
   onDeletePost,
   onOpenGroups
 }: DigitalCityHubProps) {
@@ -67,6 +70,7 @@ export default function DigitalCityHub({
     dateStr: string;
     likes: number;
     isLiked?: boolean;
+    views?: number;
     comments: any[];
   };
 
@@ -83,18 +87,37 @@ export default function DigitalCityHub({
     dateStr: p.dateStr,
     likes: p.likes,
     isLiked: p.isLiked,
+    views: p.views ?? 0,
     comments: p.comments.map((c) => ({
       id: c.id,
+      authorId: c.authorId,
       authorName: c.authorName,
       authorAvatar: c.authorAvatar,
       authorRole: c.authorRole,
       content: c.content,
       dateStr: c.dateStr,
+      likes: c.likes,
+      isLiked: c.isLiked,
+      replies: c.replies,
     })),
   });
 
   const [gatherPosts, setGatherPosts] = useState<GatherPost[]>([]);
   const [gatherLoading, setGatherLoading] = useState(true);
+
+  const [viewOverrides, setViewOverrides] = useState<Record<string, number>>({});
+  const [viewedThisSession, setViewedThisSession] = useState<Set<string>>(new Set());
+
+  const trackView = async (postId: string) => {
+    if (viewedThisSession.has(postId)) return; // only count once per visit
+    setViewedThisSession((prev) => new Set(prev).add(postId));
+    try {
+      const res = await api.post<{ views: number }>(`/community/posts/${postId}/view`);
+      setViewOverrides((prev) => ({ ...prev, [postId]: res.views }));
+    } catch (err) {
+      console.error('View tracking failed:', err);
+    }
+  };
 
   useEffect(() => {
     api
@@ -143,16 +166,33 @@ export default function DigitalCityHub({
     }
   };
 
-  const handleAddGatherComment = async (postId: string) => {
-    const text = newGatherCommentText[postId] || '';
+  const handleAddGatherComment = async (postId: string, parentId?: string) => {
+    const text = parentId ? (gatherReplyText[parentId] || '') : (newGatherCommentText[postId] || '');
     if (!text.trim()) return;
 
     try {
-      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${postId}/comments`, { content: text });
+      const res = await api.post<{ post: CommunityPost }>(`/community/posts/${postId}/comments`, { content: text, parentId });
       setGatherPosts((prev) => prev.map((p) => (p.id === postId ? toGatherPost(res.post) : p)));
-      setNewGatherCommentText((prev) => ({ ...prev, [postId]: '' }));
+      if (parentId) {
+        setGatherReplyText((prev) => ({ ...prev, [parentId]: '' }));
+        setGatherReplyingTo(null);
+      } else {
+        setNewGatherCommentText((prev) => ({ ...prev, [postId]: '' }));
+      }
     } catch (err) {
       console.error('Comment failed:', err);
+    }
+  };
+
+  const [gatherReplyingTo, setGatherReplyingTo] = useState<string | null>(null);
+  const [gatherReplyText, setGatherReplyText] = useState<{ [key: string]: string }>({});
+
+  const handleLikeGatherComment = async (postId: string, commentId: string) => {
+    try {
+      const res = await api.post<{ post: CommunityPost }>(`/community/comments/${commentId}/like`);
+      setGatherPosts((prev) => prev.map((p) => (p.id === postId ? toGatherPost(res.post) : p)));
+    } catch (err) {
+      console.error('Like comment failed:', err);
     }
   };
 
@@ -276,6 +316,17 @@ export default function DigitalCityHub({
 
     onAddComment(postId, text);
     setNewCommentText(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
+
+  const handleAddReply = (postId: string, parentId: string) => {
+    const text = replyText[parentId] || '';
+    if (!text.trim()) return;
+    onAddComment(postId, text, parentId);
+    setReplyText((prev) => ({ ...prev, [parentId]: '' }));
+    setReplyingTo(null);
   };
 
   const handleDeletePost = (id: string) => {
@@ -964,13 +1015,17 @@ export default function DigitalCityHub({
                             {/* Media content */}
                             {post.mediaUrl && post.mediaType === 'photo' && (
                               <div className="border-t border-b border-slate-900 overflow-hidden">
-                                <img src={post.mediaUrl} alt="Gather upload" className="w-full max-h-80 object-cover" referrerPolicy="no-referrer" />
+                                <ZoomableImage src={post.mediaUrl} alt="Gather upload" className="w-full max-h-80 object-cover" />
                               </div>
                             )}
 
                             {post.mediaUrl && post.mediaType === 'video' && (
                               <div className="border-t border-b border-slate-900 bg-black aspect-video relative">
-                                <video src={post.mediaUrl} controls className="w-full h-full" />
+                                <video src={post.mediaUrl} controls className="w-full h-full" onPlay={() => trackView(post.id)} />
+                                <div className="absolute top-2 left-2 flex items-center space-x-1 bg-black/70 text-white text-[10px] font-mono px-2 py-1 rounded-full pointer-events-none">
+                                  <Eye className="w-3 h-3" />
+                                  <span>{viewOverrides[post.id] ?? post.views ?? 0} views</span>
+                                </div>
                               </div>
                             )}
 
@@ -1007,16 +1062,78 @@ export default function DigitalCityHub({
                                 {post.comments.length > 0 && (
                                   <div className="space-y-3">
                                     {post.comments.map((comm) => (
-                                      <div key={comm.id} className="flex items-start space-x-3 text-xs bg-slate-900/60 p-3 rounded-xl border border-slate-900">
-                                        <img src={comm.authorAvatar} alt={comm.authorName} className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
-                                        <div className="flex-grow">
-                                          <div className="flex items-baseline space-x-1.5">
-                                            <span className="font-bold text-white font-serif">{comm.authorName}</span>
-                                            <span className="text-[8px] text-slate-500 font-mono">({comm.authorRole})</span>
-                                            <span className="text-[8px] text-slate-600 font-mono ml-auto">{comm.dateStr}</span>
+                                      <div key={comm.id}>
+                                        <div className="flex items-start space-x-3 text-xs bg-slate-900/60 p-3 rounded-xl border border-slate-900">
+                                          <img src={comm.authorAvatar} alt={comm.authorName} className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
+                                          <div className="flex-grow">
+                                            <div className="flex items-baseline space-x-1.5">
+                                              <span className="font-bold text-white font-serif">{comm.authorName}</span>
+                                              <span className="text-[8px] text-slate-500 font-mono">({comm.authorRole})</span>
+                                              <span className="text-[8px] text-slate-600 font-mono ml-auto">{comm.dateStr}</span>
+                                            </div>
+                                            <p className="text-slate-300 mt-1 leading-relaxed">{comm.content}</p>
+                                            <div className="flex items-center space-x-3 mt-2">
+                                              <button
+                                                onClick={() => handleLikeGatherComment(post.id, comm.id)}
+                                                className={`flex items-center space-x-1 text-[10px] ${comm.isLiked ? 'text-red-500' : 'text-slate-500 hover:text-red-400'}`}
+                                              >
+                                                <Heart className={`w-3 h-3 ${comm.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                                                <span>{comm.likes || 0}</span>
+                                              </button>
+                                              <button
+                                                onClick={() => setGatherReplyingTo(gatherReplyingTo === comm.id ? null : comm.id)}
+                                                className="text-[10px] text-slate-500 hover:text-slate-300"
+                                              >
+                                                Reply
+                                              </button>
+                                            </div>
                                           </div>
-                                          <p className="text-slate-300 mt-1 leading-relaxed">{comm.content}</p>
                                         </div>
+
+                                        {/* Replies */}
+                                        {comm.replies && comm.replies.length > 0 && (
+                                          <div className="ml-8 mt-2 space-y-2">
+                                            {comm.replies.map((reply: any) => (
+                                              <div key={reply.id} className="flex items-start space-x-2 text-xs bg-slate-900/40 p-2.5 rounded-lg border border-slate-900">
+                                                <img src={reply.authorAvatar} alt={reply.authorName} className="w-6 h-6 rounded-full border border-slate-800 object-cover" />
+                                                <div className="flex-grow">
+                                                  <div className="flex items-baseline space-x-1.5">
+                                                    <span className="font-bold text-white font-serif text-[11px]">{reply.authorName}</span>
+                                                    <span className="text-[7px] text-slate-600 font-mono ml-auto">{reply.dateStr}</span>
+                                                  </div>
+                                                  <p className="text-slate-300 mt-0.5 leading-relaxed">{reply.content}</p>
+                                                  <button
+                                                    onClick={() => handleLikeGatherComment(post.id, reply.id)}
+                                                    className={`flex items-center space-x-1 text-[9px] mt-1 ${reply.isLiked ? 'text-red-500' : 'text-slate-500 hover:text-red-400'}`}
+                                                  >
+                                                    <Heart className={`w-2.5 h-2.5 ${reply.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                                                    <span>{reply.likes || 0}</span>
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {/* Reply input */}
+                                        {gatherReplyingTo === comm.id && (
+                                          <div className="ml-8 mt-2 flex items-center space-x-2">
+                                            <input
+                                              type="text"
+                                              value={gatherReplyText[comm.id] || ''}
+                                              onChange={(e) => setGatherReplyText({ ...gatherReplyText, [comm.id]: e.target.value })}
+                                              placeholder="Write a reply..."
+                                              autoFocus
+                                              className="flex-grow bg-slate-900 border border-slate-800 text-xs text-white p-2 rounded-xl focus:border-brand-gold outline-none"
+                                            />
+                                            <button
+                                              onClick={() => handleAddGatherComment(post.id, comm.id)}
+                                              className="p-2 bg-brand-gold hover:bg-brand-gold-dark text-brand-blue-950 rounded-xl font-bold cursor-pointer"
+                                            >
+                                              <Send className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -1223,7 +1340,7 @@ export default function DigitalCityHub({
                         {/* Attached Image/Video assets */}
                         {post.imageUrl && (
                           <div className="border-t border-b border-slate-900 overflow-hidden">
-                            <img src={post.imageUrl} alt="Covenant upload" className="w-full max-h-80 object-cover hover:scale-[1.01] transition-transform duration-300" />
+                            <ZoomableImage src={post.imageUrl} alt="Covenant upload" className="w-full max-h-80 object-cover hover:scale-[1.01] transition-transform duration-300" />
                           </div>
                         )}
 
@@ -1233,8 +1350,12 @@ export default function DigitalCityHub({
                               src={post.videoUrl} 
                               controls 
                               className="w-full h-full"
-                              poster="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&q=80&w=800"
+                              onPlay={() => trackView(post.id)}
                             />
+                            <div className="absolute top-2 left-2 flex items-center space-x-1 bg-black/70 text-white text-[10px] font-mono px-2 py-1 rounded-full pointer-events-none">
+                              <Eye className="w-3 h-3" />
+                              <span>{viewOverrides[post.id] ?? post.views ?? 0} views</span>
+                            </div>
                           </div>
                         )}
 
@@ -1282,16 +1403,78 @@ export default function DigitalCityHub({
                             {post.comments.length > 0 && (
                               <div className="space-y-3">
                                 {post.comments.map((comm) => (
-                                  <div key={comm.id} className="flex items-start space-x-3 text-xs bg-slate-900/60 p-3 rounded-xl border border-slate-900">
-                                    <img src={comm.authorAvatar} alt={comm.authorName} className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
-                                    <div className="flex-grow">
-                                      <div className="flex items-baseline space-x-1.5">
-                                        <span className="font-bold text-white font-serif">{comm.authorName}</span>
-                                        <span className="text-[8px] text-slate-500 font-mono">({comm.authorRole})</span>
-                                        <span className="text-[8px] text-slate-600 font-mono ml-auto">{comm.dateStr}</span>
+                                  <div key={comm.id}>
+                                    <div className="flex items-start space-x-3 text-xs bg-slate-900/60 p-3 rounded-xl border border-slate-900">
+                                      <img src={comm.authorAvatar} alt={comm.authorName} className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
+                                      <div className="flex-grow">
+                                        <div className="flex items-baseline space-x-1.5">
+                                          <span className="font-bold text-white font-serif">{comm.authorName}</span>
+                                          <span className="text-[8px] text-slate-500 font-mono">({comm.authorRole})</span>
+                                          <span className="text-[8px] text-slate-600 font-mono ml-auto">{comm.dateStr}</span>
+                                        </div>
+                                        <p className="text-slate-300 mt-1 leading-relaxed">{comm.content}</p>
+                                        <div className="flex items-center space-x-3 mt-2">
+                                          <button
+                                            onClick={() => onLikeComment(post.id, comm.id)}
+                                            className={`flex items-center space-x-1 text-[10px] ${comm.isLiked ? 'text-red-500' : 'text-slate-500 hover:text-red-400'}`}
+                                          >
+                                            <Heart className={`w-3 h-3 ${comm.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                                            <span>{comm.likes || 0}</span>
+                                          </button>
+                                          <button
+                                            onClick={() => setReplyingTo(replyingTo === comm.id ? null : comm.id)}
+                                            className="text-[10px] text-slate-500 hover:text-slate-300"
+                                          >
+                                            Reply
+                                          </button>
+                                        </div>
                                       </div>
-                                      <p className="text-slate-300 mt-1 leading-relaxed">{comm.content}</p>
                                     </div>
+
+                                    {/* Replies */}
+                                    {comm.replies && comm.replies.length > 0 && (
+                                      <div className="ml-8 mt-2 space-y-2">
+                                        {comm.replies.map((reply: any) => (
+                                          <div key={reply.id} className="flex items-start space-x-2 text-xs bg-slate-900/40 p-2.5 rounded-lg border border-slate-900">
+                                            <img src={reply.authorAvatar} alt={reply.authorName} className="w-6 h-6 rounded-full border border-slate-800 object-cover" />
+                                            <div className="flex-grow">
+                                              <div className="flex items-baseline space-x-1.5">
+                                                <span className="font-bold text-white font-serif text-[11px]">{reply.authorName}</span>
+                                                <span className="text-[7px] text-slate-600 font-mono ml-auto">{reply.dateStr}</span>
+                                              </div>
+                                              <p className="text-slate-300 mt-0.5 leading-relaxed">{reply.content}</p>
+                                              <button
+                                                onClick={() => onLikeComment(post.id, reply.id)}
+                                                className={`flex items-center space-x-1 text-[9px] mt-1 ${reply.isLiked ? 'text-red-500' : 'text-slate-500 hover:text-red-400'}`}
+                                              >
+                                                <Heart className={`w-2.5 h-2.5 ${reply.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                                                <span>{reply.likes || 0}</span>
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Reply input */}
+                                    {replyingTo === comm.id && (
+                                      <div className="ml-8 mt-2 flex items-center space-x-2">
+                                        <input
+                                          type="text"
+                                          value={replyText[comm.id] || ''}
+                                          onChange={(e) => setReplyText({ ...replyText, [comm.id]: e.target.value })}
+                                          placeholder="Write a reply..."
+                                          autoFocus
+                                          className="flex-grow bg-slate-900 border border-slate-800 text-xs text-white p-2 rounded-xl focus:border-brand-gold outline-none"
+                                        />
+                                        <button
+                                          onClick={() => handleAddReply(post.id, comm.id)}
+                                          className="p-2 bg-brand-gold hover:bg-brand-gold-dark text-brand-blue-950 rounded-xl font-bold cursor-pointer"
+                                        >
+                                          <Send className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, AuthedRequest } from '../middleware/auth.js';
 import { notifyUser } from '../lib/notifications.js';
+import { avatarOrDefault } from '../lib/avatar.js';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get('/users', requireAuth, async (req: AuthedRequest, res) => {
     take: 10,
   });
 
-  res.json({ users });
+  res.json({ users: users.map((u) => ({ ...u, avatar: avatarOrDefault(u.avatar) })) });
 });
 
 // Share a piece of content with another platform member — delivered as a notification.

@@ -48,6 +48,7 @@ model User {
   blogPosts         BlogPost[]
   communityPosts    CommunityPost[]
   communityComments CommunityComment[]
+  communityCommentLikes CommunityCommentLike[]
   communityLikes    CommunityLike[]
   communityAgrees   CommunityAgreement[]
   groupsCreated     Group[]
@@ -94,6 +95,7 @@ model Lesson {
   practices     String[] @default([])
   content       String?
   order         Int      @default(0)
+  views         Int      @default(0)
   moduleId      String
   module        CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
@@ -193,6 +195,7 @@ model CommunityPost {
   audioUrl  String?
   category  String   @default("teaching") // testimony | prophetic | prayer-alarm | teaching | Sermon | Devotional | ...
   feedType  String   @default("city") // "city" (main feed) | "gather"
+  views     Int      @default(0)
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   groupId   String?
@@ -211,7 +214,21 @@ model CommunityComment {
   post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId  String
   author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    CommunityComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   CommunityComment[] @relation("CommentReplies")
+  likes     CommunityCommentLike[]
   createdAt DateTime      @default(now())
+}
+
+model CommunityCommentLike {
+  id        String           @id @default(cuid())
+  commentId String
+  comment   CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
 }
 
 model CommunityLike {

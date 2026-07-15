@@ -2,22 +2,55 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
 import { notifyUser, notifyRole } from '../lib/notifications.js';
+import { avatarOrDefault } from '../lib/avatar.js';
 
 const router = Router();
 
 const postInclude = {
   author: true,
-  comments: { include: { author: true }, orderBy: { createdAt: 'asc' as const } },
+  comments: {
+    include: { author: true, likes: true },
+    orderBy: { createdAt: 'asc' as const },
+  },
   likes: true,
   agreements: true,
 };
+
+function shapeComment(c: any, currentUserId?: string) {
+  return {
+    id: c.id,
+    authorId: c.authorId,
+    authorName: c.author.name,
+    authorAvatar: avatarOrDefault(c.author.avatar),
+    authorRole: c.author.role,
+    content: c.content,
+    dateStr: c.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    parentId: c.parentId ?? undefined,
+    likes: c.likes.length,
+    isLiked: currentUserId ? c.likes.some((l: any) => l.userId === currentUserId) : false,
+  };
+}
+
+function nestComments(comments: any[], currentUserId?: string) {
+  const shaped = comments.map((c) => shapeComment(c, currentUserId));
+  const repliesByParent = new Map<string, any[]>();
+  for (const c of shaped) {
+    if (c.parentId) {
+      if (!repliesByParent.has(c.parentId)) repliesByParent.set(c.parentId, []);
+      repliesByParent.get(c.parentId)!.push(c);
+    }
+  }
+  return shaped
+    .filter((c) => !c.parentId)
+    .map((c) => ({ ...c, replies: repliesByParent.get(c.id) ?? [] }));
+}
 
 function shape(post: any, currentUserId?: string) {
   return {
     id: post.id,
     authorId: post.authorId,
     authorName: post.author.name,
-    authorAvatar: post.author.avatar,
+    authorAvatar: avatarOrDefault(post.author.avatar),
     authorRole: post.author.role,
     content: post.content,
     imageUrl: post.imageUrl ?? undefined,
@@ -28,17 +61,11 @@ function shape(post: any, currentUserId?: string) {
     dateStr: post.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     category: post.category,
     feedType: post.feedType,
+    views: post.views ?? 0,
     groupId: post.groupId ?? undefined,
     isLiked: currentUserId ? post.likes.some((l: any) => l.userId === currentUserId) : false,
     isAgreed: currentUserId ? post.agreements.some((a: any) => a.userId === currentUserId) : false,
-    comments: post.comments.map((c: any) => ({
-      id: c.id,
-      authorName: c.author.name,
-      authorAvatar: c.author.avatar,
-      authorRole: c.author.role,
-      content: c.content,
-      dateStr: c.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    })),
+    comments: nestComments(post.comments, currentUserId),
   };
 }
 
@@ -129,22 +156,52 @@ router.post('/posts/:id/agree', requireAuth, async (req: AuthedRequest, res) => 
 });
 
 router.post('/posts/:id/comments', requireAuth, async (req: AuthedRequest, res) => {
-  const { content } = req.body ?? {};
+  const { content, parentId } = req.body ?? {};
   if (!content) return res.status(400).json({ error: 'Comment content is required' });
 
   await prisma.communityComment.create({
-    data: { content, postId: req.params.id, authorId: req.userId! },
+    data: { content, postId: req.params.id, authorId: req.userId!, parentId: parentId ?? null },
   });
 
   const post = await prisma.communityPost.findUnique({ where: { id: req.params.id }, include: postInclude });
   if (!post) return res.status(404).json({ error: 'Post not found' });
 
-  if (post.authorId !== req.userId) {
-    const commenter = await prisma.user.findUnique({ where: { id: req.userId } });
+  const commenter = await prisma.user.findUnique({ where: { id: req.userId } });
+
+  if (parentId) {
+    const parentComment = await prisma.communityComment.findUnique({ where: { id: parentId } });
+    if (parentComment && parentComment.authorId !== req.userId) {
+      notifyUser(parentComment.authorId, `${commenter?.name ?? 'Someone'} replied to your comment.`);
+    }
+  } else if (post.authorId !== req.userId) {
     notifyUser(post.authorId, `${commenter?.name ?? 'Someone'} commented on your post.`);
   }
 
   res.status(201).json({ post: shape(post, req.userId) });
+});
+
+// Like/unlike a comment.
+router.post('/comments/:id/like', requireAuth, async (req: AuthedRequest, res) => {
+  const comment = await prisma.communityComment.findUnique({ where: { id: req.params.id } });
+  if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+  const existing = await prisma.communityCommentLike.findUnique({
+    where: { commentId_userId: { commentId: req.params.id, userId: req.userId! } },
+  });
+
+  if (existing) {
+    await prisma.communityCommentLike.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.communityCommentLike.create({ data: { commentId: req.params.id, userId: req.userId! } });
+    if (comment.authorId !== req.userId) {
+      const liker = await prisma.user.findUnique({ where: { id: req.userId } });
+      notifyUser(comment.authorId, `${liker?.name ?? 'Someone'} liked your comment.`);
+    }
+  }
+
+  const post = await prisma.communityPost.findUnique({ where: { id: comment.postId }, include: postInclude });
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  res.json({ post: shape(post, req.userId) });
 });
 
 // Delete a post — the author, or an Admin, only.
@@ -189,7 +246,7 @@ router.post('/live-sessions', requireAuth, requireRole('Admin'), async (req: Aut
       status: status === 'live' ? 'live' : 'upcoming',
       scheduledTime: scheduledTime ?? null,
       hostName: host?.name ?? '',
-      hostAvatar: host?.avatar ?? '',
+      hostAvatar: avatarOrDefault(host?.avatar),
       viewerCount: 0,
     },
   });
@@ -208,6 +265,19 @@ router.post('/live-sessions', requireAuth, requireRole('Admin'), async (req: Aut
   });
 
   notifyRole('Student', `A new live session was just created: "${title}"`);
+});
+
+// Track a video view on a post (any signed-in user).
+router.post('/posts/:id/view', requireAuth, async (req, res) => {
+  try {
+    const post = await prisma.communityPost.update({
+      where: { id: req.params.id },
+      data: { views: { increment: 1 } },
+    });
+    res.json({ views: post.views });
+  } catch {
+    res.status(404).json({ error: 'Post not found' });
+  }
 });
 
 export default router;

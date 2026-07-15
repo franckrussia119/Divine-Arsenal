@@ -32,7 +32,7 @@ function toProfile(u: any): UserProfile {
     bio: u.bio ?? '',
     homeChurch: u.homeChurch ?? '',
     joinedDate: u.createdAt ? `Joined ${new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : '',
-    avatar: u.avatar || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=150&h=150',
+    avatar: u.avatar && u.avatar.trim() ? u.avatar : '/default-avatar.svg',
     streak: u.streak ?? 0,
     coursesCount: u.coursesCount ?? 0,
     lessonsCount: u.lessonsCount ?? 0,

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Course, Lesson, CourseModule, JournalEntry } from '../types';
-import { ChevronLeft, CheckCircle2, Circle, Play, BookOpen, Flame, Compass, MessageSquare, Save, CheckCircle, ChevronDown, ListPlus, Notebook } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, Circle, Play, BookOpen, Flame, Compass, MessageSquare, Save, CheckCircle, ChevronDown, ListPlus, Notebook, Eye } from 'lucide-react';
 import ShareButton from './ShareButton';
+import { api } from '../lib/api';
 
 interface CourseLessonViewProps {
   course: Course;
@@ -35,12 +36,28 @@ export default function CourseLessonView({
   const [reflectionText, setReflectionText] = useState('');
   const [isSaved, setIsSaved] = useState(false);
 
-  // Discussion comments state
-  const [comments, setComments] = useState([
-    { id: 1, author: 'Efe Chukwu', date: 'Yesterday', text: 'This lesson completely changed my perspective on midnight intercession. Truly seated in Christ!' },
-    { id: 2, author: 'Chiamaka N.', date: '3 days ago', text: 'Does anyone have a list of covenant legal scriptures for business defense? I loved verse Job 22:28.' }
-  ]);
+  // Discussion comments state — local-only for now (not yet persisted to the database)
+  const [comments, setComments] = useState<{ id: number; author: string; date: string; text: string }[]>([]);
   const [newComment, setNewComment] = useState('');
+
+  // View tracking for this lesson's video
+  const [lessonViews, setLessonViews] = useState(activeLesson.views ?? 0);
+  const [viewedLessons, setViewedLessons] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setLessonViews(activeLesson.views ?? 0);
+  }, [activeLesson.id]);
+
+  const handleVideoPlay = async () => {
+    if (viewedLessons.has(activeLesson.id)) return;
+    setViewedLessons((prev) => new Set(prev).add(activeLesson.id));
+    try {
+      const data = await api.post<{ views: number }>(`/courses/${course.id}/lessons/${activeLesson.id}/view`);
+      setLessonViews(data.views);
+    } catch (err) {
+      console.error('View tracking failed:', err);
+    }
+  };
 
   const handleSaveReflection = () => {
     if (!reflectionText.trim()) return;
@@ -113,12 +130,19 @@ export default function CourseLessonView({
             {/* Video Player / Presentation Block */}
             <div className="bg-black rounded-2xl overflow-hidden aspect-video relative shadow-xl border border-slate-800 group">
               {activeLesson.videoUrl ? (
-                <video
-                  src={activeLesson.videoUrl}
-                  controls
-                  className="w-full h-full object-cover"
-                  poster={course.imageUrl}
-                />
+                <>
+                  <video
+                    src={activeLesson.videoUrl}
+                    controls
+                    className="w-full h-full object-cover"
+                    poster={course.imageUrl}
+                    onPlay={handleVideoPlay}
+                  />
+                  <div className="absolute top-3 left-3 flex items-center space-x-1 bg-black/70 text-white text-[10px] font-mono px-2.5 py-1.5 rounded-full pointer-events-none">
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{lessonViews} views</span>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-brand-blue-950 p-8 text-center text-white">
                   <BookOpen className="w-16 h-16 text-brand-gold/60 mb-4 animate-bounce" />
