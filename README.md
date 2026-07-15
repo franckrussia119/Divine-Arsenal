@@ -24,6 +24,7 @@ Telegram notification whenever someone signs up).
 - **Share button** on lessons, blog articles, and community posts — share to WhatsApp, copy a direct link, use the phone's native share sheet, or send it straight to another member on the platform (they get a notification with a link that opens the exact content).
 - **Delete your own posts** (Admins can delete any post) in the main feed, Gather, and inside groups.
 - **Real in-app notifications** — the bell icon shows real, live activity (comments, likes, prayer agreements, counselor replies, new courses/teachings/music/podcasts, live sessions, being added to a group), polling every 30 seconds.
+- **Real device push notifications** — not just the in-app bell. Once someone enables it (a prompt appears after they're signed in), they get actual OS-level notifications on their phone/laptop lock screen for the same events — even when the app isn't open. Tapping one opens the app straight to that content. Requires a one-time VAPID key setup (see below) — without it, the in-app bell still works fine, device push is just disabled.
 - **Groups** — anyone can create a group; others browse and join it Reddit-style. Group admins can add members directly by email, remove members, and each group has its own post feed.
 - **Admin analytics** — total users, students, counselors, enrollments, per-course enrollment/progress, and a full list of students with what they're enrolled in.
 - **Installable as a mobile app (PWA)** — a manifest, app icons generated from your logo, and a service worker mean visitors get "Add to Home Screen" / "Install App" on Android and iOS. A custom install banner now actively prompts first-time visitors to install it (shown once per device).
@@ -37,6 +38,14 @@ Telegram notification whenever someone signs up).
 - No real-time "who's online" presence tracking (would need WebSockets).
 - No password-reset email flow yet.
 - Notifications are in-app only (polling) — no push notifications to the phone's lock screen yet; that would need a separate VAPID/push-subscription setup.
+
+### Push notification setup (optional, but recommended)
+1. On your own computer (needs Node.js), run: `npx web-push generate-vapid-keys`
+2. It prints a Public Key and a Private Key — copy both.
+3. In Coolify, set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` to those values, and `VAPID_SUBJECT` to `mailto:youremail@yourdomain.com` (any email you control).
+4. Redeploy. Signed-in users will now see a prompt to enable notifications, and get real ones on their device from then on.
+
+If you skip this, everything else works fine — the app just won't send device-level push notifications, only the in-app bell.
 
 ### Email setup — two options
 You now have a choice of email provider, controlled entirely by which environment variables you set. **If `SMTP_USER`/`SMTP_PASS` are set, that's used — Resend is only a fallback.**

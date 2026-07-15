@@ -14,6 +14,7 @@ import GroupDetailView from './components/GroupDetailView';
 import MusicView from './components/MusicView';
 import PodcastView from './components/PodcastView';
 import InstallPrompt from './components/InstallPrompt';
+import NotificationPermissionPrompt from './components/NotificationPermissionPrompt';
 import AuthScreen from './components/Auth/AuthScreen';
 
 import { UserRole, Course, BlogPost, PrayerPoint, JournalEntry, Message, CommunityPost, LiveSession } from './types';
@@ -35,6 +36,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingEnrollCourseId, setPendingEnrollCourseId] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [deepLinkPost, setDeepLinkPost] = useState<{ postId: string; feedType: string } | null>(null);
 
   // Catalog data (public — visible to everyone)
   const [allCourses, setAllCourses] = useState<Course[]>([]);
@@ -92,6 +94,9 @@ export default function App() {
       }
     } else if (view === 'community') {
       setCurrentTab('community-city');
+      const postId = params.get('postId');
+      const feedType = params.get('feedType');
+      if (postId) setDeepLinkPost({ postId, feedType: feedType === 'gather' ? 'gather' : 'city' });
     }
 
     // Clean the URL so refreshing/navigating doesn't keep re-triggering this.
@@ -497,6 +502,9 @@ export default function App() {
                 onLikeComment={handleLikeComment}
                 onDeletePost={handleDeleteCommunityPost}
                 onOpenGroups={() => { setSelectedGroupId(null); setCurrentTab('groups'); }}
+                deepLinkPostId={deepLinkPost?.postId}
+                deepLinkFeedType={deepLinkPost?.feedType}
+                onConsumeDeepLink={() => setDeepLinkPost(null)}
               />
             )}
 
@@ -536,6 +544,7 @@ export default function App() {
       </main>
 
       <InstallPrompt />
+      {user && <NotificationPermissionPrompt />}
 
     </div>
   );

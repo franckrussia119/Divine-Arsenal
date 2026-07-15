@@ -1,9 +1,11 @@
 import { prisma } from './prisma.js';
+import { sendPushToUser, sendPushToRole } from './push.js';
 
 export async function notifyUser(userId: string | null | undefined, message: string, link?: string) {
   if (!userId) return;
   try {
     await prisma.notification.create({ data: { userId, message, link: link ?? null } });
+    sendPushToUser(userId, { title: 'Divine Arsenal', body: message, url: link });
   } catch (err) {
     console.error('Failed to create notification:', err);
   }
@@ -16,6 +18,7 @@ export async function notifyRole(role: 'Student' | 'Counselor' | 'Admin', messag
     await prisma.notification.createMany({
       data: users.map((u) => ({ userId: u.id, message, link: link ?? null })),
     });
+    sendPushToRole(role, { title: 'Divine Arsenal', body: message, url: link });
   } catch (err) {
     console.error('Failed to create role notifications:', err);
   }

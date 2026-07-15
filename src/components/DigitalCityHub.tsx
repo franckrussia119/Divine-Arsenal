@@ -23,6 +23,9 @@ interface DigitalCityHubProps {
   onLikeComment: (postId: string, commentId: string) => void;
   onDeletePost: (id: string) => void;
   onOpenGroups: () => void;
+  deepLinkPostId?: string;
+  deepLinkFeedType?: string;
+  onConsumeDeepLink?: () => void;
 }
 
 export default function DigitalCityHub({
@@ -35,7 +38,10 @@ export default function DigitalCityHub({
   onAddComment,
   onLikeComment,
   onDeletePost,
-  onOpenGroups
+  onOpenGroups,
+  deepLinkPostId,
+  deepLinkFeedType,
+  onConsumeDeepLink
 }: DigitalCityHubProps) {
   const { lang, t } = useTranslation();
 
@@ -104,6 +110,23 @@ export default function DigitalCityHub({
 
   const [gatherPosts, setGatherPosts] = useState<GatherPost[]>([]);
   const [gatherLoading, setGatherLoading] = useState(true);
+
+  useEffect(() => {
+    if (!deepLinkPostId) return;
+    if (deepLinkFeedType === 'gather' && gatherLoading) return; // wait for Gather posts to load first
+    setActiveSubTab(deepLinkFeedType === 'gather' ? 'gather' : 'feed');
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`community-post-${deepLinkPostId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-brand-gold');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-brand-gold'), 3000);
+      }
+      onConsumeDeepLink?.();
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkPostId, deepLinkFeedType, gatherLoading]);
 
   const [viewOverrides, setViewOverrides] = useState<Record<string, number>>({});
   const [viewedThisSession, setViewedThisSession] = useState<Set<string>>(new Set());
@@ -971,8 +994,7 @@ export default function DigitalCityHub({
                       gatherPosts
                         .filter(p => gatherFilter === 'All' || p.category === gatherFilter)
                         .map(post => (
-                          <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-md overflow-hidden">
-                            {/* Card Header */}
+                          <div key={post.id} id={`community-post-${post.id}`} className="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-md overflow-hidden transition-shadow duration-500">
                             <div className="p-5 flex items-start justify-between">
                               <div className="flex items-center space-x-3.5">
                                 <img
@@ -1053,7 +1075,7 @@ export default function DigitalCityHub({
                                 <span>{post.comments.length} Comments</span>
                               </button>
 
-                              <ShareButton title={post.content.slice(0, 60)} path={`/?view=community`} dark />
+                              <ShareButton title={post.content.slice(0, 60)} path={`/?view=community&postId=${post.id}&feedType=gather`} dark />
                             </div>
 
                             {/* Comment Thread */}
@@ -1286,7 +1308,7 @@ export default function DigitalCityHub({
                   {/* Feed stream list */}
                   <div className="space-y-6">
                     {filteredPosts.map((post) => (
-                      <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-sm overflow-hidden" id={`cpost-${post.id}`}>
+                      <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-sm overflow-hidden transition-shadow duration-500" id={`community-post-${post.id}`}>
                         
                         {/* Feed Card Header */}
                         <div className="p-5 flex items-start justify-between">
@@ -1392,7 +1414,7 @@ export default function DigitalCityHub({
                             <span>{post.comments.length} Scribes</span>
                           </button>
 
-                          <ShareButton title={post.content.slice(0, 60)} path={`/?view=community`} dark />
+                          <ShareButton title={post.content.slice(0, 60)} path={`/?view=community&postId=${post.id}&feedType=city`} dark />
                         </div>
 
                         {/* Expanded comments thread */}
