@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Users, UserPlus, Heart, MessageSquare, Send, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Heart, MessageSquare, Send, X, Trash2, Image as ImageIcon, Video, Mic } from 'lucide-react';
 import ZoomableImage from './ZoomableImage';
 import { Group, GroupMember, CommunityPost } from '../types';
 import { api } from '../lib/api';
+import { uploadFile } from '../lib/uploadWithProgress';
 import { useTranslation } from '../translations';
 
 interface GroupDetailViewProps {
@@ -19,6 +20,11 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [postContent, setPostContent] = useState('');
+  const [postImage, setPostImage] = useState('');
+  const [postVideo, setPostVideo] = useState('');
+  const [postAudio, setPostAudio] = useState('');
+  const [mediaUploading, setMediaUploading] = useState<'image' | 'video' | 'audio' | null>(null);
+  const [mediaProgress, setMediaProgress] = useState(0);
   const [addEmail, setAddEmail] = useState('');
   const [showAddMember, setShowAddMember] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -52,6 +58,31 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
     }
   };
 
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, kind: 'photo' | 'video' | 'audio') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('That file is larger than 50MB. Please choose a smaller one.');
+      e.target.value = '';
+      return;
+    }
+    setMediaUploading(kind === 'photo' ? 'image' : kind);
+    setMediaProgress(0);
+    try {
+      const data = await uploadFile<{ url: string }>('/api/uploads/media', 'media', file, { onProgress: setMediaProgress });
+      if (kind === 'photo') { setPostImage(data.url); setPostVideo(''); setPostAudio(''); }
+      else if (kind === 'video') { setPostVideo(data.url); setPostImage(''); setPostAudio(''); }
+      else { setPostAudio(data.url); setPostImage(''); setPostVideo(''); }
+    } catch (err) {
+      console.error('Media upload failed:', err);
+      alert('Could not upload that file. Please try again.');
+    } finally {
+      setMediaUploading(null);
+      setMediaProgress(0);
+      e.target.value = '';
+    }
+  };
+
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!postContent.trim()) return;
@@ -60,9 +91,15 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
         content: postContent,
         category: 'teaching',
         groupId,
+        imageUrl: postImage || undefined,
+        videoUrl: postVideo || undefined,
+        audioUrl: postAudio || undefined,
       });
       setPosts((prev) => [res.post, ...prev]);
       setPostContent('');
+      setPostImage('');
+      setPostVideo('');
+      setPostAudio('');
     } catch (err: any) {
       alert(err?.message || 'Could not post — you may need to join this group first.');
     }
@@ -144,6 +181,36 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
                 placeholder={`Post something to ${group.name}…`}
                 className="w-full h-20 p-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-brand-gold"
               />
+
+              <div className="grid grid-cols-3 gap-2">
+                <label
+                  htmlFor="group-photo-upload"
+                  className="flex items-center justify-center space-x-1.5 p-2.5 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold-dark transition-colors text-[11px]"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>{mediaUploading === 'image' ? `${mediaProgress}%` : postImage ? 'Photo ✓' : 'Photo'}</span>
+                </label>
+                <input id="group-photo-upload" type="file" accept="image/*" className="hidden" disabled={!!mediaUploading} onChange={(e) => handleMediaUpload(e, 'photo')} />
+
+                <label
+                  htmlFor="group-video-upload"
+                  className="flex items-center justify-center space-x-1.5 p-2.5 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold-dark transition-colors text-[11px]"
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>{mediaUploading === 'video' ? `${mediaProgress}%` : postVideo ? 'Video ✓' : 'Video'}</span>
+                </label>
+                <input id="group-video-upload" type="file" accept="video/*" className="hidden" disabled={!!mediaUploading} onChange={(e) => handleMediaUpload(e, 'video')} />
+
+                <label
+                  htmlFor="group-audio-upload"
+                  className="flex items-center justify-center space-x-1.5 p-2.5 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold-dark transition-colors text-[11px]"
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  <span>{mediaUploading === 'audio' ? `${mediaProgress}%` : postAudio ? 'Voice note ✓' : 'Voice note'}</span>
+                </label>
+                <input id="group-audio-upload" type="file" accept="audio/*" className="hidden" disabled={!!mediaUploading} onChange={(e) => handleMediaUpload(e, 'audio')} />
+              </div>
+
               <button
                 type="submit"
                 className="flex items-center space-x-2 px-4 py-2 bg-brand-blue-950 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-brand-blue-900"
@@ -182,6 +249,7 @@ export default function GroupDetailView({ groupId, currentUserId, isAdminRole, o
                 <p className="text-sm text-slate-700 leading-relaxed">{p.content}</p>
                 {p.imageUrl && <ZoomableImage src={p.imageUrl} alt="" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
                 {p.videoUrl && <video src={p.videoUrl} controls className="mt-3 rounded-lg max-h-80 w-full" />}
+                {p.audioUrl && <audio src={p.audioUrl} controls className="mt-3 w-full h-9" />}
                 <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-slate-100">
                   <button
                     onClick={() => handleLike(p.id)}

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { notifyUser } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -76,6 +77,20 @@ router.get('/students', async (_req, res) => {
       })),
     })),
   });
+});
+
+// Promote an existing Student account to Counselor (doesn't create a new account).
+router.post('/students/:id/promote', async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.role !== 'Student') {
+    return res.status(400).json({ error: 'Only Student accounts can be promoted from here' });
+  }
+
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { role: 'Counselor' } });
+  notifyUser(updated.id, "You've been promoted to Counselor! You now have counselor access across the platform.");
+
+  res.json({ ok: true });
 });
 
 export default router;

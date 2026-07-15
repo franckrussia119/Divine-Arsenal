@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Course, BlogPost, PrayerPoint, UserProfile } from '../types';
-import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3, Video } from 'lucide-react';
+import { PlusCircle, Save, BookOpen, Shield, ShieldAlert, Sparkles, UserCheck, MessageSquare, Flame, Upload, Users, GraduationCap, BarChart3, Video, X, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/uploadWithProgress';
 
@@ -60,9 +60,77 @@ export default function CounselorAdminDashboard({
   const [courseIsFree, setCourseIsFree] = useState(true);
   const [coursePrice, setCoursePrice] = useState('$19');
   const [courseImg, setCourseImg] = useState('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800');
-  const [courseVideoUrl, setCourseVideoUrl] = useState('');
-  const [courseVideoUploading, setCourseVideoUploading] = useState(false);
-  const [courseVideoProgress, setCourseVideoProgress] = useState(0);
+
+  interface LessonDraft {
+    id: string;
+    title: string;
+    description: string;
+    videoUrl: string;
+    uploading: boolean;
+    progress: number;
+  }
+  interface ModuleDraft {
+    id: string;
+    title: string;
+    lessons: LessonDraft[];
+  }
+  const makeEmptyLesson = (): LessonDraft => ({
+    id: `les-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: '',
+    description: '',
+    videoUrl: '',
+    uploading: false,
+    progress: 0,
+  });
+  const makeEmptyModule = (n: number): ModuleDraft => ({
+    id: `mod-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: `Module ${n}`,
+    lessons: [makeEmptyLesson()],
+  });
+  const [courseModules, setCourseModules] = useState<ModuleDraft[]>([makeEmptyModule(1)]);
+
+  const addModule = () => {
+    setCourseModules((prev) => [...prev, makeEmptyModule(prev.length + 1)]);
+  };
+  const removeModule = (modId: string) => {
+    setCourseModules((prev) => prev.filter((m) => m.id !== modId));
+  };
+  const updateModuleTitle = (modId: string, title: string) => {
+    setCourseModules((prev) => prev.map((m) => (m.id === modId ? { ...m, title } : m)));
+  };
+  const addLesson = (modId: string) => {
+    setCourseModules((prev) => prev.map((m) => (m.id === modId ? { ...m, lessons: [...m.lessons, makeEmptyLesson()] } : m)));
+  };
+  const removeLesson = (modId: string, lesId: string) => {
+    setCourseModules((prev) => prev.map((m) => (m.id === modId ? { ...m, lessons: m.lessons.filter((l) => l.id !== lesId) } : m)));
+  };
+  const updateLessonField = (modId: string, lesId: string, field: 'title' | 'description', value: string) => {
+    setCourseModules((prev) =>
+      prev.map((m) => (m.id === modId ? { ...m, lessons: m.lessons.map((l) => (l.id === lesId ? { ...l, [field]: value } : l)) } : m))
+    );
+  };
+  const setLessonUploadState = (modId: string, lesId: string, patch: Partial<LessonDraft>) => {
+    setCourseModules((prev) =>
+      prev.map((m) => (m.id === modId ? { ...m, lessons: m.lessons.map((l) => (l.id === lesId ? { ...l, ...patch } : l)) } : m))
+    );
+  };
+  const handleLessonVideoUpload = async (modId: string, lesId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLessonUploadState(modId, lesId, { uploading: true, progress: 0 });
+    try {
+      const data = await uploadFile<{ url: string }>('/api/uploads/video', 'video', file, {
+        onProgress: (p) => setLessonUploadState(modId, lesId, { progress: p }),
+      });
+      setLessonUploadState(modId, lesId, { videoUrl: data.url, uploading: false, progress: 0 });
+    } catch (err) {
+      console.error('Lesson video upload failed:', err);
+      alert('Could not upload that video. Please try a smaller file.');
+      setLessonUploadState(modId, lesId, { uploading: false, progress: 0 });
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   // Admin-only: staff account creation
   const [staffName, setStaffName] = useState('');
@@ -74,31 +142,27 @@ export default function CounselorAdminDashboard({
   // Admin-only: platform stats
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [students, setStudents] = useState<AdminStudent[]>([]);
+  const [promotingId, setPromotingId] = useState<string | null>(null);
+
+  const handlePromoteStudent = async (studentId: string, studentName: string) => {
+    if (!window.confirm(`Promote ${studentName} to Counselor? They'll gain counselor access across the platform.`)) return;
+    setPromotingId(studentId);
+    try {
+      await api.post(`/admin/students/${studentId}/promote`);
+      setStudents((prev) => prev.filter((s) => s.id !== studentId));
+      triggerNotification(`${studentName} has been promoted to Counselor!`);
+    } catch (err: any) {
+      alert(err?.message || 'Could not promote that student.');
+    } finally {
+      setPromotingId(null);
+    }
+  };
 
   useEffect(() => {
     if (currentRole !== 'Admin') return;
     api.get<AdminStats>('/admin/stats').then(setStats).catch(console.error);
     api.get<{ students: AdminStudent[] }>('/admin/students').then((res) => setStudents(res.students)).catch(console.error);
   }, [currentRole]);
-
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCourseVideoUploading(true);
-    setCourseVideoProgress(0);
-    try {
-      const data = await uploadFile<{ url: string }>('/api/uploads/video', 'video', file, {
-        onProgress: setCourseVideoProgress,
-      });
-      setCourseVideoUrl(data.url);
-    } catch (err) {
-      console.error('Video upload failed:', err);
-      alert('Could not upload that video. Please try a smaller file.');
-    } finally {
-      setCourseVideoUploading(false);
-      setCourseVideoProgress(0);
-    }
-  };
 
   // Admin-only: create a real live session
   const [liveTitle, setLiveTitle] = useState('');
@@ -162,46 +226,46 @@ export default function CounselorAdminDashboard({
   const handleCreateCourse = (e: React.FormEvent) => {
     e.preventDefault();
     if (!courseTitle || !courseDesc) return;
-    
+    if (courseModules.some((m) => m.lessons.some((l) => l.uploading))) {
+      alert('Please wait for all lesson videos to finish uploading first.');
+      return;
+    }
+
     const newC: Course = {
       id: `course-${Date.now()}`,
       title: courseTitle,
       subtitle: courseSubtitle || 'A premium training pathway for spiritual masters',
       category: courseCategory,
-      numLessons: 3,
+      numLessons: courseModules.reduce((acc, m) => acc + m.lessons.length, 0),
       duration: '2 hours',
       description: courseDesc,
       isFree: courseIsFree,
       price: courseIsFree ? 'Free' : coursePrice,
       imageUrl: courseImg,
       progress: 0,
-      modules: [
-        {
-          id: `mod-${Date.now()}`,
-          title: 'Module 1: Divine Entrances',
-          lessons: [
-            {
-              id: `les-${Date.now()}-1`,
-              title: '1. Foundations of Covenant Authority',
-              duration: '15 mins',
-              videoDuration: '15:00',
-              completed: false,
-              videoUrl: courseVideoUrl || undefined,
-              keyVerse: 'Colossians 1:13 - "He has delivered us from the domain of darkness and transferred us to the kingdom of his beloved Son."'
-            }
-          ]
-        }
-      ]
+      modules: courseModules.map((m, mi) => ({
+        id: m.id,
+        title: m.title || `Module ${mi + 1}`,
+        lessons: m.lessons.map((l, li) => ({
+          id: l.id,
+          title: l.title || `Lesson ${li + 1}`,
+          duration: '15 mins',
+          videoDuration: '15:00',
+          completed: false,
+          videoUrl: l.videoUrl || undefined,
+          content: l.description || undefined,
+        })),
+      })),
     };
 
     onAddCourse(newC);
-    triggerNotification(`Successfully published Course: "${courseTitle}"!`);
+    triggerNotification(`Successfully published Course: "${courseTitle}" with ${courseModules.length} module(s)!`);
     
     // Reset
     setCourseTitle('');
     setCourseSubtitle('');
     setCourseDesc('');
-    setCourseVideoUrl('');
+    setCourseModules([makeEmptyModule(1)]);
   };
 
   const handleCreateBlogPost = (e: React.FormEvent) => {
@@ -428,25 +492,103 @@ export default function CounselorAdminDashboard({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">First Lesson Video</label>
-                  <label
-                    htmlFor="course-video-upload"
-                    className="flex items-center justify-center space-x-2 w-full p-3 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold transition-colors"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>
-                      {courseVideoUploading ? `Uploading… ${courseVideoProgress}%` : courseVideoUrl ? 'Video uploaded — click to replace' : 'Click to upload a video file'}
-                    </span>
-                  </label>
-                  <input
-                    id="course-video-upload"
-                    type="file"
-                    accept="video/*"
-                    className="hidden"
-                    disabled={courseVideoUploading}
-                    onChange={handleVideoUpload}
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">You can add more modules/lessons to this course afterward.</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold">Modules & Lessons</label>
+                    <button
+                      type="button"
+                      onClick={addModule}
+                      className="flex items-center space-x-1 text-[10px] font-bold text-brand-gold-dark hover:text-brand-gold"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Add Module</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {courseModules.map((mod, mi) => (
+                      <div key={mod.id} className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={mod.title}
+                            onChange={(e) => updateModuleTitle(mod.id, e.target.value)}
+                            placeholder={`Module ${mi + 1} title`}
+                            className="flex-1 p-2 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:border-brand-gold"
+                          />
+                          {courseModules.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeModule(mod.id)}
+                              className="p-2 text-slate-400 hover:text-red-500"
+                              title="Remove module"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {mod.lessons.map((les, li) => (
+                          <div key={les.id} className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-mono text-slate-400 uppercase font-bold">Lesson {li + 1}</span>
+                              {mod.lessons.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeLesson(mod.id, les.id)}
+                                  className="text-slate-400 hover:text-red-500"
+                                  title="Remove lesson"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              value={les.title}
+                              onChange={(e) => updateLessonField(mod.id, les.id, 'title', e.target.value)}
+                              placeholder="Lesson title"
+                              className="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-gold"
+                            />
+                            <textarea
+                              value={les.description}
+                              onChange={(e) => updateLessonField(mod.id, les.id, 'description', e.target.value)}
+                              placeholder="Lesson description"
+                              className="w-full h-16 p-2 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-gold"
+                            />
+                            <label
+                              htmlFor={`lesson-video-${les.id}`}
+                              className="flex items-center justify-center space-x-2 w-full p-2.5 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-brand-gold text-slate-500 hover:text-brand-gold transition-colors text-[11px]"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>
+                                {les.uploading
+                                  ? `Uploading… ${les.progress}%`
+                                  : les.videoUrl
+                                  ? 'Video uploaded ✓ — click to replace'
+                                  : 'Upload video for this lesson'}
+                              </span>
+                            </label>
+                            <input
+                              id={`lesson-video-${les.id}`}
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              disabled={les.uploading}
+                              onChange={(e) => handleLessonVideoUpload(mod.id, les.id, e)}
+                            />
+                          </div>
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={() => addLesson(mod.id)}
+                          className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-[10px] font-bold text-slate-500 hover:text-brand-gold hover:border-brand-gold transition-colors"
+                        >
+                          + Add Lesson to this Module
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
@@ -630,7 +772,7 @@ export default function CounselorAdminDashboard({
                   ) : (
                     students.map((s) => (
                       <div key={s.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start gap-2">
                           <span className="font-semibold text-slate-700">{s.name}</span>
                           <span className="text-slate-400 font-mono text-[10px]">{s.email}</span>
                         </div>
@@ -645,6 +787,13 @@ export default function CounselorAdminDashboard({
                             ))}
                           </ul>
                         )}
+                        <button
+                          onClick={() => handlePromoteStudent(s.id, s.name)}
+                          disabled={promotingId === s.id}
+                          className="mt-2 px-2.5 py-1 rounded-md bg-brand-blue-950 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-brand-blue-900 disabled:opacity-60"
+                        >
+                          {promotingId === s.id ? 'Promoting…' : 'Promote to Counselor'}
+                        </button>
                       </div>
                     ))
                   )}
