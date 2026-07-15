@@ -34,4 +34,14 @@ router.post('/unsubscribe', requireAuth, async (req: AuthedRequest, res) => {
   res.json({ ok: true });
 });
 
+router.post('/test', requireAuth, async (req: AuthedRequest, res) => {
+  const count = await prisma.pushSubscription.count({ where: { userId: req.userId } });
+  if (count === 0) {
+    return res.status(400).json({ error: 'No devices are enabled for notifications yet on this account.' });
+  }
+  const { sendPushToUser } = await import('../lib/push.js');
+  await sendPushToUser(req.userId, { title: 'Divine Arsenal', body: 'This is a test notification — it works! 🎉', url: '/' });
+  res.json({ ok: true, devices: count });
+});
+
 export default router;

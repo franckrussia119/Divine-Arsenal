@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import path from 'path';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth.js';
 import { uploadAvatar, uploadVideo, uploadMedia, uploadAudio } from '../lib/uploads.js';
+import { compressIfVideo } from '../lib/videoCompress.js';
 
 const router = Router();
 
@@ -28,7 +30,11 @@ router.post('/media', requireAuth, (req, res, next) => {
     : req.file.mimetype.startsWith('audio/')
     ? 'audio'
     : 'image';
-  res.status(201).json({ url: `/uploads/media/${req.file.filename}`, type });
+
+  const finalPath = await compressIfVideo(req.file.path, req.file.mimetype);
+  const filename = path.basename(finalPath);
+
+  res.status(201).json({ url: `/uploads/media/${filename}`, type });
 });
 
 // Admin/Counselor only — music tracks & podcast episodes. Larger cap (150MB).
@@ -45,7 +51,11 @@ router.post('/audio', requireAuth, requireRole('Admin', 'Counselor'), (req, res,
 // Admin/Counselor only — used when building a course's lessons.
 router.post('/video', requireAuth, requireRole('Admin', 'Counselor'), uploadVideo.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video file was uploaded' });
-  res.status(201).json({ url: `/uploads/videos/${req.file.filename}` });
+
+  const finalPath = await compressIfVideo(req.file.path, req.file.mimetype);
+  const filename = path.basename(finalPath);
+
+  res.status(201).json({ url: `/uploads/videos/${filename}` });
 });
 
 export default router;

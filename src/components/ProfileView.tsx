@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { UserProfile, Course } from '../types';
 import { Award, Shield, Key, Sparkles, CheckCircle, FileText, X, Download, HelpCircle, Flame, Mail, Phone, Church, Save, Calendar } from 'lucide-react';
 import { uploadFile } from '../lib/uploadWithProgress';
+import { subscribeToPush, isPushSupported } from '../lib/push';
+import { api } from '../lib/api';
 import { useTranslation } from '../translations';
 
 interface ProfileViewProps {
@@ -25,7 +27,34 @@ export default function ProfileView({
   const [editBio, setEditBio] = useState(profile.bio);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarProgress, setAvatarProgress] = useState(0);
+  const [notifBusy, setNotifBusy] = useState(false);
+  const [notifMessage, setNotifMessage] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  const handleEnableNotifications = async () => {
+    if (!isPushSupported()) {
+      setNotifMessage("This browser doesn't support notifications.");
+      return;
+    }
+    setNotifBusy(true);
+    setNotifMessage(null);
+    const ok = await subscribeToPush();
+    setNotifMessage(ok ? 'Notifications enabled on this device! 🎉' : 'Permission was not granted — check your browser settings.');
+    setNotifBusy(false);
+  };
+
+  const handleTestNotification = async () => {
+    setNotifBusy(true);
+    setNotifMessage(null);
+    try {
+      await api.post('/push/test');
+      setNotifMessage('Test notification sent — check your notification bar.');
+    } catch (err: any) {
+      setNotifMessage(err?.message || 'Could not send a test notification. Try enabling notifications first.');
+    } finally {
+      setNotifBusy(false);
+    }
+  };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -325,6 +354,31 @@ export default function ProfileView({
                   Cancel Plan
                 </button>
               </div>
+            </div>
+
+            {/* Notifications settings */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-1">Notifications</h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Get real alerts on this device — comments, likes, replies, new courses, and more.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleEnableNotifications}
+                  disabled={notifBusy}
+                  className="flex-1 py-2.5 bg-brand-gold text-brand-blue-950 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-brand-gold-light transition-colors disabled:opacity-60"
+                >
+                  {notifBusy ? 'Working…' : 'Enable Notifications'}
+                </button>
+                <button
+                  onClick={handleTestNotification}
+                  disabled={notifBusy}
+                  className="flex-1 py-2.5 border border-slate-200 hover:border-slate-300 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors disabled:opacity-60"
+                >
+                  Send Test Notification
+                </button>
+              </div>
+              {notifMessage && <p className="text-[11px] text-slate-500 mt-3">{notifMessage}</p>}
             </div>
 
             {/* Streak milestones widget */}
