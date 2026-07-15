@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Shield, Sparkles, BookOpen, Flame, Bell, LogIn, LogOut, ChevronDown, Award, Sparkle, Compass, User as UserIcon, Globe, Menu, X, Home, Users, Music, Mic, GraduationCap, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useTranslation } from '../translations';
@@ -496,7 +497,12 @@ export default function Header({
 
         </div>
       </div>
-      {/* Mobile bottom tab bar — replaces the old hamburger dropdown */}
+      {/* Mobile bottom tab bar — rendered via portal straight into <body> so it's
+          truly fixed to the viewport, immune to any ancestor's blur/transform/
+          animation redefining its positioning context (which is what was making
+          it drift or vanish during scroll/zoom before). */}
+      {createPortal(
+        <>
       <div
         className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-brand-blue-950 border-t border-brand-gold/20"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -586,9 +592,12 @@ export default function Header({
           </div>
         </div>
       )}
+        </>,
+        document.body
+      )}
 
       {/* Sign-out confirmation */}
-      {showLogoutConfirm && (
+      {showLogoutConfirm && createPortal(
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
@@ -611,7 +620,8 @@ export default function Header({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

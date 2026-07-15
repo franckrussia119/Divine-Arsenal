@@ -4,7 +4,7 @@ import {
   Flame, Sparkles, MessageSquare, Heart, Video, Users, Share2, 
   Send, Plus, ChevronRight, Image as ImageIcon, Check, Mic, MicOff, 
   VideoOff, ShieldAlert, Radio, HelpCircle, Trophy, Globe, ArrowLeft,
-  Tv, Eye, Play, Sparkle, AlertCircle, Trash2
+  Tv, Eye, Play, Sparkle, AlertCircle, Trash2, Info
 } from 'lucide-react';
 import { useTranslation } from '../translations';
 import { api } from '../lib/api';
@@ -129,6 +129,7 @@ export default function DigitalCityHub({
   }, [deepLinkPostId, deepLinkFeedType, gatherLoading]);
 
   const [viewOverrides, setViewOverrides] = useState<Record<string, number>>({});
+  const [showHeroInfo, setShowHeroInfo] = useState(false);
   const [viewedThisSession, setViewedThisSession] = useState<Set<string>>(new Set());
 
   const trackView = async (postId: string) => {
@@ -393,57 +394,66 @@ export default function DigitalCityHub({
         
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
           <div>
-            <div className="flex items-center space-x-2 text-xs text-brand-gold font-mono uppercase tracking-widest mb-1.5">
+            <div className="hidden sm:flex items-center space-x-2 text-xs text-brand-gold font-mono uppercase tracking-widest mb-1.5">
               <Globe className="w-3.5 h-3.5 text-brand-gold animate-spin-slow" />
               <span>{lang === 'fr' ? "Réseau Numérique des Citoyens de l'Alliance" : "Covenant Citizen Digital Grid"}</span>
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-white flex items-center">
               {lang === 'fr' ? "Zion Cité Digitale" : "Zion Digital City"} <Sparkles className="w-6 h-6 text-brand-gold ml-2.5 animate-pulse" />
+              <button
+                onClick={() => setShowHeroInfo((s) => !s)}
+                className="sm:hidden ml-2 w-6 h-6 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-brand-gold shrink-0"
+                aria-label="About Zion Digital City"
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+            <p className={`text-slate-400 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed ${showHeroInfo ? '' : 'hidden'} sm:block`}>
               {lang === 'fr' 
                 ? "Bienvenue dans la forteresse spirituelle métropolitaine. Communiquez en toute sécurité, veillez sur les Portes géographiques, partagez des témoignages et accédez à des sanctuaires d'intercession en direct type Zoom en temps réel." 
                 : "Welcome to the metropolitan spiritual fortress. Communicate securely, guard geographical Gates, share testimonies, and access live Zoom-like intercession sanctuaries in real-time."}
             </p>
           </div>
 
-          <div className="mt-6 md:mt-0 flex space-x-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="mt-6 md:mt-0 grid grid-cols-4 gap-1.5 sm:flex sm:space-x-3">
             <button
               onClick={() => { setActiveSubTab('gather'); setActiveSession(null); }}
-              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`px-1.5 sm:px-4 py-2 text-[10px] sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 ${
                 activeSubTab === 'gather' && !activeSession
-                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
+                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 sm:scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <Flame className="w-4 h-4 text-brand-gold" />
-              <span>{lang === 'fr' ? "Rassembler (Gather)" : "Gather"}</span>
+              <span className="truncate">{lang === 'fr' ? "Rassembler" : "Gather"}</span>
             </button>
             <button
               onClick={() => { setActiveSubTab('feed'); setActiveSession(null); }}
-              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`px-1.5 sm:px-4 py-2 text-[10px] sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 ${
                 activeSubTab === 'feed' && !activeSession
-                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
+                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 sm:scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span>{lang === 'fr' ? "Actualités de la Cité" : "City Square Feed"}</span>
+              <span className="truncate sm:hidden">{lang === 'fr' ? "Cité" : "Feed"}</span>
+              <span className="hidden sm:inline">{lang === 'fr' ? "Actualités de la Cité" : "City Square Feed"}</span>
             </button>
             <button
               onClick={() => { setActiveSubTab('live-lobby'); setActiveSession(null); }}
-              className={`shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+              className={`px-1.5 sm:px-4 py-2 text-[10px] sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 ${
                 activeSubTab === 'live-lobby' || activeSession
-                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 scale-[1.03]'
+                  ? 'bg-brand-gold text-brand-blue-950 shadow-lg shadow-brand-gold/15 sm:scale-[1.03]'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-              <span>{lang === 'fr' ? `Sanctuaires en Direct (${sessions.filter(s => s.status === 'live').length})` : `Live Sanctuaries (${sessions.filter(s => s.status === 'live').length})`}</span>
+              <span className="truncate sm:hidden">{lang === 'fr' ? `Direct (${sessions.filter(s => s.status === 'live').length})` : `Live (${sessions.filter(s => s.status === 'live').length})`}</span>
+              <span className="hidden sm:inline">{lang === 'fr' ? `Sanctuaires en Direct (${sessions.filter(s => s.status === 'live').length})` : `Live Sanctuaries (${sessions.filter(s => s.status === 'live').length})`}</span>
             </button>
             <button
               onClick={onOpenGroups}
-              className="shrink-0 snap-start px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center space-x-2 bg-slate-800 text-slate-300 hover:bg-slate-700"
+              className="px-1.5 sm:px-4 py-2 text-[10px] sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 bg-slate-800 text-slate-300 hover:bg-slate-700"
             >
               <Users className="w-4 h-4" />
               <span>{t('groups')}</span>
