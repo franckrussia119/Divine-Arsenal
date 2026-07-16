@@ -92,6 +92,7 @@ export interface Course {
 
 export interface BlogPost {
   id: string;
+  authorId?: string;
   title: string;
   category: string;
   excerpt: string;

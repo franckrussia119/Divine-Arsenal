@@ -93,4 +93,18 @@ router.post('/students/:id/promote', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Demote an existing Counselor account back to Student.
+router.post('/staff/:id/demote', async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.role !== 'Counselor') {
+    return res.status(400).json({ error: 'Only Counselor accounts can be demoted from here' });
+  }
+
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { role: 'Student' } });
+  notifyUser(updated.id, 'Your account role has been changed back to Student.');
+
+  res.json({ ok: true });
+});
+
 export default router;

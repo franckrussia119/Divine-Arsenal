@@ -1060,8 +1060,8 @@ export default function DigitalCityHub({
                             )}
 
                             {post.mediaUrl && post.mediaType === 'video' && (
-                              <div className="border-t border-b border-slate-900 bg-black aspect-video relative">
-                                <video src={post.mediaUrl} controls className="w-full h-full" onPlay={() => trackView(post.id)} />
+                              <div className="border-t border-b border-slate-900 bg-black relative flex items-center justify-center max-h-[70vh] overflow-hidden">
+                                <video src={post.mediaUrl} controls className="w-full h-auto max-h-[70vh] object-contain" onPlay={() => trackView(post.id)} />
                                 <div className="absolute top-2 left-2 flex items-center space-x-1 bg-black/70 text-white text-[10px] font-mono px-2 py-1 rounded-full pointer-events-none">
                                   <Eye className="w-3 h-3" />
                                   <span>{viewOverrides[post.id] ?? post.views ?? 0} views</span>
@@ -1383,11 +1383,11 @@ export default function DigitalCityHub({
                         )}
 
                         {post.videoUrl && (
-                          <div className="border-t border-b border-slate-900 bg-black aspect-video relative">
+                          <div className="border-t border-b border-slate-900 bg-black relative flex items-center justify-center max-h-[70vh] overflow-hidden">
                             <video 
                               src={post.videoUrl} 
                               controls 
-                              className="w-full h-full"
+                              className="w-full h-auto max-h-[70vh] object-contain"
                               onPlay={() => trackView(post.id)}
                             />
                             <div className="absolute top-2 left-2 flex items-center space-x-1 bg-black/70 text-white text-[10px] font-mono px-2 py-1 rounded-full pointer-events-none">

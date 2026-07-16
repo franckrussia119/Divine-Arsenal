@@ -33,6 +33,7 @@ interface CounselorAdminDashboardProps {
   onAddCourse: (newCourse: Course) => void;
   blogPosts: BlogPost[];
   onAddBlogPost: (newPost: BlogPost) => void;
+  onDeleteBlogPost: (id: string) => void;
   prayers: PrayerPoint[];
   onCounselorReplyToPrayer: (id: string, replyText: string) => void;
 }
@@ -44,6 +45,7 @@ export default function CounselorAdminDashboard({
   onAddCourse,
   blogPosts,
   onAddBlogPost,
+  onDeleteBlogPost,
   prayers,
   onCounselorReplyToPrayer
 }: CounselorAdminDashboardProps) {
@@ -143,6 +145,8 @@ export default function CounselorAdminDashboard({
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [students, setStudents] = useState<AdminStudent[]>([]);
   const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [staff, setStaff] = useState<{ id: string; name: string; email: string; role: 'Counselor' | 'Admin' }[]>([]);
+  const [demotingId, setDemotingId] = useState<string | null>(null);
 
   const handlePromoteStudent = async (studentId: string, studentName: string) => {
     if (!window.confirm(`Promote ${studentName} to Counselor? They'll gain counselor access across the platform.`)) return;
@@ -158,10 +162,30 @@ export default function CounselorAdminDashboard({
     }
   };
 
+  const handleDemoteCounselor = async (staffId: string, staffName: string) => {
+    if (!window.confirm(`Move ${staffName} back down to Student level? They'll lose counselor access.`)) return;
+    setDemotingId(staffId);
+    try {
+      await api.post(`/admin/staff/${staffId}/demote`);
+      setStaff((prev) => prev.filter((s) => s.id !== staffId));
+      triggerNotification(`${staffName} has been moved back to Student.`);
+    } catch (err: any) {
+      alert(err?.message || 'Could not demote that account.');
+    } finally {
+      setDemotingId(null);
+    }
+  };
+
+  const handleDeleteBlogPostClick = (id: string, title: string) => {
+    if (!window.confirm(`Delete the teaching "${title}"? This cannot be undone.`)) return;
+    onDeleteBlogPost(id);
+  };
+
   useEffect(() => {
     if (currentRole !== 'Admin') return;
     api.get<AdminStats>('/admin/stats').then(setStats).catch(console.error);
     api.get<{ students: AdminStudent[] }>('/admin/students').then((res) => setStudents(res.students)).catch(console.error);
+    api.get<{ staff: { id: string; name: string; email: string; role: 'Counselor' | 'Admin' }[] }>('/auth/staff').then((res) => setStaff(res.staff)).catch(console.error);
   }, [currentRole]);
 
   // Admin-only: create a real live session
@@ -662,6 +686,36 @@ export default function CounselorAdminDashboard({
                   Publish Living Blog Teaching
                 </button>
               </form>
+
+              {/* Manage existing teachings */}
+              <div className="mt-6 pt-5 border-t border-slate-100">
+                <h4 className="text-[10px] font-mono text-slate-500 uppercase font-bold mb-3">
+                  Manage Teachings ({blogPosts.length})
+                </h4>
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {blogPosts.length === 0 ? (
+                    <p className="text-xs text-slate-400">No teachings published yet.</p>
+                  ) : (
+                    blogPosts
+                      .filter((p) => currentRole === 'Admin' || p.authorId === profile.id)
+                      .map((p) => (
+                        <div key={p.id} className="flex items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-700 truncate">{p.title}</p>
+                            <p className="text-[10px] text-slate-400">{p.author} · {p.date}</p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteBlogPostClick(p.id, p.title)}
+                            className="shrink-0 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete teaching"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </div>
             </div>
 
           </div>
@@ -759,6 +813,43 @@ export default function CounselorAdminDashboard({
                     {staffCreating ? 'Creating…' : 'Create Account'}
                   </button>
                 </form>
+              </div>
+
+              {/* Staff Accounts */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="font-serif font-bold text-brand-blue-950 text-lg mb-4 flex items-center">
+                  <ShieldAlert className="w-5 h-5 mr-2 text-brand-gold" /> Staff Accounts ({staff.length})
+                </h3>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {staff.length === 0 ? (
+                    <p className="text-xs text-slate-400">No Counselor/Admin accounts yet.</p>
+                  ) : (
+                    staff.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-semibold text-slate-700 truncate">{s.name}</span>
+                            <span className={`text-[9px] font-mono uppercase font-bold px-1.5 py-0.5 rounded ${
+                              s.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {s.role}
+                            </span>
+                          </div>
+                          <span className="text-slate-400 font-mono text-[10px]">{s.email}</span>
+                        </div>
+                        {s.role === 'Counselor' && (
+                          <button
+                            onClick={() => handleDemoteCounselor(s.id, s.name)}
+                            disabled={demotingId === s.id}
+                            className="shrink-0 px-2.5 py-1 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-wider hover:bg-red-100 hover:text-red-600 disabled:opacity-60"
+                          >
+                            {demotingId === s.id ? 'Working…' : 'Demote to Student'}
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
 
               {/* Enrolled Students */}

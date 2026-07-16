@@ -8,6 +8,7 @@ const router = Router();
 function shape(post: any) {
   return {
     id: post.id,
+    authorId: post.authorId ?? undefined,
     title: post.title,
     category: post.category,
     excerpt: post.excerpt,
@@ -49,6 +50,18 @@ router.post('/', requireAuth, requireRole('Admin', 'Counselor'), async (req: Aut
 
   res.status(201).json({ post: shape(post) });
   notifyRole('Student', `A new teaching was just published: "${title}"`);
+});
+
+// Delete a blog post — its author, or an Admin, only.
+router.delete('/:id', requireAuth, async (req: AuthedRequest, res) => {
+  const post = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  if (post.authorId !== req.userId && req.userRole !== 'Admin') {
+    return res.status(403).json({ error: 'You can only delete your own teachings' });
+  }
+
+  await prisma.blogPost.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
 });
 
 export default router;

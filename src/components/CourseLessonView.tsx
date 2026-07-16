@@ -128,13 +128,13 @@ export default function CourseLessonView({
           <div className="lg:col-span-2 space-y-6">
             
             {/* Video Player / Presentation Block */}
-            <div className="bg-black rounded-2xl overflow-hidden aspect-video relative shadow-xl border border-slate-800 group">
+            <div className="bg-black rounded-2xl overflow-hidden relative shadow-xl border border-slate-800 group">
               {activeLesson.videoUrl ? (
-                <>
+                <div className="flex items-center justify-center max-h-[70vh] overflow-hidden">
                   <video
                     src={activeLesson.videoUrl}
                     controls
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto max-h-[70vh] object-contain"
                     poster={course.imageUrl}
                     onPlay={handleVideoPlay}
                   />
@@ -142,9 +142,9 @@ export default function CourseLessonView({
                     <Eye className="w-3.5 h-3.5" />
                     <span>{lessonViews} views</span>
                   </div>
-                </>
+                </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-brand-blue-950 p-8 text-center text-white">
+                <div className="aspect-video w-full h-full flex flex-col items-center justify-center bg-brand-blue-950 p-8 text-center text-white">
                   <BookOpen className="w-16 h-16 text-brand-gold/60 mb-4 animate-bounce" />
                   <h3 className="font-serif text-xl font-bold">Written & Scriptural Devotional Lesson</h3>
                   <p className="text-xs text-slate-400 max-w-sm mt-1">

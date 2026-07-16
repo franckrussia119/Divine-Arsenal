@@ -287,6 +287,15 @@ export default function App() {
     }
   };
 
+  const handleDeleteBlogPost = async (id: string) => {
+    try {
+      await api.delete(`/blog/${id}`);
+      setBlogPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err: any) {
+      alert(err?.message || 'Could not delete that teaching.');
+    }
+  };
+
   const handleCounselorReplyToPrayer = async (prayerId: string, replyText: string) => {
     try {
       await api.post(`/prayers/${prayerId}/reply`, { text: replyText });
@@ -534,6 +543,7 @@ export default function App() {
                 onAddCourse={handleAddCourse}
                 blogPosts={blogPosts}
                 onAddBlogPost={handleAddBlogPost}
+                onDeleteBlogPost={handleDeleteBlogPost}
                 prayers={prayers}
                 onCounselorReplyToPrayer={handleCounselorReplyToPrayer}
               />
